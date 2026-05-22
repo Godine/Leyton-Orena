@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --arena-bg: #1a1a2e;
+  --arena-surface: #22223d;
+  --arena-surface-2: #2a2a4a;
+  --arena-border: #34345a;
+  --arena-green: #58cc02;
+  --arena-green-dark: #46a302;
+  --arena-amber: #ffc800;
+  --arena-coral: #ff4b4b;
+  --arena-ink: #f5f5fb;
+  --arena-muted: #a0a0c0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--arena-bg);
+  color: var(--arena-ink);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(88, 204, 2, 0.07), transparent 40%),
+    radial-gradient(circle at 90% 100%, rgba(255, 75, 75, 0.06), transparent 40%);
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+@layer components {
+  .arena-card {
+    @apply bg-arena-surface border border-arena-border rounded-2xl p-5 shadow-card;
+  }
+  .arena-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider;
+  }
+}
+
+/* Hide scrollbar polish */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #34345a; border-radius: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
