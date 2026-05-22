@@ -8,6 +8,7 @@ export default {
           bg: '#1a1a2e',
           surface: '#22223d',
           surface2: '#2a2a4a',
+          card: '#1e2a47',
           border: '#34345a',
           green: '#58cc02',
           'green-dark': '#46a302',
@@ -15,6 +16,24 @@ export default {
           coral: '#ff4b4b',
           ink: '#f5f5fb',
           muted: '#a0a0c0',
+        },
+        accent: {
+          green: '#58cc02',
+          amber: '#ffc800',
+          coral: '#ff4b4b',
+          blue: '#1cb0f6',
+          purple: '#ce82ff',
+        },
+        rarity: {
+          common: '#8e8ea0',
+          rare: '#1cb0f6',
+          epic: '#ce82ff',
+          legendary: '#ffc800',
+        },
+        location: {
+          london: '#64748b',
+          casablanca: '#d97706',
+          dublin: '#059669',
         },
       },
       fontFamily: {
