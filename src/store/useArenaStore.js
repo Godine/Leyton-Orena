@@ -15,6 +15,7 @@ export const useArenaStore = create((set, get) => ({
 
   // current user (used by /profile)
   currentUserId: CURRENT_USER_ID,
+  setCurrentUserId: (id) => set({ currentUserId: id }),
   getCurrentUser: () => get().consultants.find((c) => c.id === get().currentUserId),
 
   // unlock animations seen this session (keyed by `${userId}:${badgeId}`)
