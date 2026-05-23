@@ -53,24 +53,21 @@ function buildMonthlyStats(profileKey, jitter = 0) {
 }
 
 const SEED = [
-  // Technical
-  { name: 'Amélie Laurent',   role: 'Technical', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 5, bestMonthlyStreak: 6 }, badges: ['lab-rat','front-loader','peak-month','on-fire','growth-engine','diamond-hands'] },
-  { name: 'Yusuf El-Amrani',  role: 'Technical', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','on-fire'] },
-  { name: 'Niamh Doyle',      role: 'Technical', location: 'Dublin',     profile: 'steady',       streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 4 }, badges: ['lab-rat','iron-wall','sniper'] },
-  { name: 'Rajiv Khanna',     role: 'Technical', location: 'London',     profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
-  { name: 'Sara Benkirane',   role: 'Technical', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','diamond-hands','on-fire','sniper'] },
-  { name: 'Oisín Murphy',     role: 'Technical', location: 'Dublin',     profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','early-bird'] },
-  { name: 'Chloe Hartwell',   role: 'Technical', location: 'London',     profile: 'steady',       streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 3 }, badges: ['lab-rat','retention-shield'] },
-  { name: 'Karim Tazi',       role: 'Technical', location: 'Casablanca', profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat'] },
-  // Financial
-  { name: 'Helena Voss',      role: 'Financial', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 6, bestMonthlyStreak: 6 }, badges: ['front-loader','peak-month','arena-champion','on-fire','client-whisperer','diamond-hands'] },
-  { name: 'Marc Dufresne',    role: 'Financial', location: 'Dublin',     profile: 'steady',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['early-bird','iron-wall','sniper'] },
-  { name: 'Ines Cherkaoui',   role: 'Financial', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','retention-shield'] },
-  { name: 'Tom Whitaker',     role: 'Financial', location: 'London',     profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
-  { name: 'Saoirse Kelly',    role: 'Financial', location: 'Dublin',     profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','peak-month','on-fire','sniper'] },
-  { name: 'Mehdi Bouzid',     role: 'Financial', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','early-bird'] },
-  { name: 'Priya Anand',      role: 'Financial', location: 'London',     profile: 'steady',       streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 3 }, badges: ['lab-rat','client-whisperer'] },
-  { name: 'Lucas Moreau',     role: 'Financial', location: 'Dublin',     profile: 'inconsistent', streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 2 }, badges: ['lab-rat','retention-shield'] },
+  // Technical (7)
+  { name: 'Oumayma El Mahjoubi', role: 'Technical', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 5, bestMonthlyStreak: 6 }, badges: ['lab-rat','front-loader','peak-month','on-fire','growth-engine','diamond-hands'] },
+  { name: 'David Buckley',       role: 'Technical', location: 'London',     profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','on-fire'] },
+  { name: 'Ramin Yasseri',       role: 'Technical', location: 'London',     profile: 'steady',       streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 4 }, badges: ['lab-rat','iron-wall','sniper'] },
+  { name: 'Henry Shipley',       role: 'Technical', location: 'Dublin',     profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
+  { name: 'Lucas Rothwell',      role: 'Technical', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','diamond-hands','on-fire','sniper'] },
+  { name: 'Mohammed Brija',      role: 'Technical', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','early-bird'] },
+  { name: 'Mouad Ghazi',         role: 'Technical', location: 'Casablanca', profile: 'steady',       streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 3 }, badges: ['lab-rat','retention-shield'] },
+  // Financial (6)
+  { name: 'Antonio De Grazia',   role: 'Financial', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 6, bestMonthlyStreak: 6 }, badges: ['front-loader','peak-month','arena-champion','on-fire','client-whisperer','diamond-hands'] },
+  { name: 'Asad Shahid',         role: 'Financial', location: 'London',     profile: 'steady',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['early-bird','iron-wall','sniper'] },
+  { name: 'Louie Heron',         role: 'Financial', location: 'Dublin',     profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','retention-shield'] },
+  { name: 'Safae El Kalai',      role: 'Financial', location: 'Casablanca', profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
+  { name: 'Israe Rouri',         role: 'Financial', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','peak-month','on-fire','sniper'] },
+  { name: 'Douae El Boukili',    role: 'Financial', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','early-bird'] },
 ]
 
 // Deterministically spreads a consultant's earned badges across the 6 months.
@@ -99,4 +96,4 @@ export const CONSULTANTS = SEED.map((c, idx) => ({
 }))
 
 export const MONTHS_AVAILABLE = MONTHS
-export const CURRENT_USER_ID = 'c-01' // Amélie, for "My Profile"
+export const CURRENT_USER_ID = 'c-01' // Oumayma, for "My Profile"

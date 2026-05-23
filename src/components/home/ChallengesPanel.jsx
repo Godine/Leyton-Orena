@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, User, Check, Clock } from 'lucide-react'
 
 const TYPE_META = {
-  individual: { Icon: User,  accent: '#58cc02', label: 'Individual' },
+  individual: { Icon: User,  accent: '#F75C03', label: 'Individual' },
   team:       { Icon: Users, accent: '#1cb0f6', label: 'Team' },
 }
 
@@ -10,7 +10,7 @@ const TYPE_META = {
 const CONFETTI = Array.from({ length: 8 }, (_, i) => ({
   x: (i - 4) * 14 + (i % 2 ? 6 : -6),
   rot: (i - 4) * 30,
-  color: ['#58cc02', '#ffc800', '#ff4b4b', '#1cb0f6', '#ce82ff'][i % 5],
+  color: ['#F75C03', '#ffc800', '#ff4b4b', '#1cb0f6', '#ce82ff'][i % 5],
 }))
 
 function rewardLabel(reward, badgesById) {
@@ -38,8 +38,8 @@ export default function ChallengesPanel({ challenges, computed, badgesById }) {
           const meta = TYPE_META[challenge.type]
           const ratio = Math.max(0, Math.min(1, progress.ratio))
           const ringColor = progress.completed
-            ? '#58cc02'
-            : ratio >= 0.66 ? '#58cc02' : ratio >= 0.33 ? '#ffc800' : '#ff4b4b'
+            ? '#F75C03'
+            : ratio >= 0.66 ? '#F75C03' : ratio >= 0.33 ? '#ffc800' : '#ff4b4b'
           return (
             <motion.div
               key={challenge.id}

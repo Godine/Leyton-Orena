@@ -58,7 +58,7 @@ export default function LeaderboardTable({ rows, sortKey, currentUserId }) {
                   'gap-3 items-center px-5 py-3 cursor-default',
                   'transition-colors',
                   isMe
-                    ? 'bg-accent-green/10 ring-1 ring-inset ring-accent-green/40 shadow-[inset_0_0_24px_rgba(88,204,2,0.18)]'
+                    ? 'bg-accent-green/10 ring-1 ring-inset ring-accent-green/40 shadow-[inset_0_0_24px_rgba(247, 92, 3,0.18)]'
                     : 'hover:bg-arena-surface2/60',
                 ].join(' ')}
               >

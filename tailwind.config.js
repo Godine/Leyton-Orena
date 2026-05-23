@@ -10,15 +10,20 @@ export default {
           surface2: '#2a2a4a',
           card: '#1e2a47',
           border: '#34345a',
-          green: '#58cc02',
-          'green-dark': '#46a302',
+          green: '#F75C03',        // legacy token alias — now Leyton orange
+          'green-dark': '#C44A02',
           amber: '#ffc800',
           coral: '#ff4b4b',
           ink: '#f5f5fb',
           muted: '#a0a0c0',
+          orange: '#F75C03',
+          'orange-dark': '#C44A02',
+          'orange-soft': '#FF8A3D',
+          navy: '#0F1845',
         },
         accent: {
-          green: '#58cc02',
+          green: '#F75C03',        // primary accent (was Duolingo green, now Leyton orange)
+          orange: '#F75C03',
           amber: '#ffc800',
           coral: '#ff4b4b',
           blue: '#1cb0f6',
@@ -41,7 +46,7 @@ export default {
         body: ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 0 24px rgba(88, 204, 2, 0.35)',
+        glow: '0 0 24px rgba(247, 92, 3, 0.40)',
         'glow-amber': '0 0 24px rgba(255, 200, 0, 0.35)',
         card: '0 4px 0 0 rgba(0,0,0,0.35)',
       },

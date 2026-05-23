@@ -59,8 +59,8 @@ export default function TrendChart({ stats }) {
             <stop offset="100%" stopColor="#ffc800" stopOpacity="0.3" />
           </linearGradient>
           <linearGradient id="lineFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#58cc02" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#58cc02" stopOpacity="0" />
+            <stop offset="0%" stopColor="#F75C03" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#F75C03" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -105,7 +105,7 @@ export default function TrendChart({ stats }) {
         <motion.path
           d={opsPath}
           fill="none"
-          stroke="#58cc02"
+          stroke="#F75C03"
           strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -114,7 +114,7 @@ export default function TrendChart({ stats }) {
           transition={{ duration: 1.0, ease: 'easeOut' }}
         />
         {opsPoints.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={3.5} fill="#58cc02" stroke="#1a1a2e" strokeWidth={2} />
+          <circle key={i} cx={x} cy={y} r={3.5} fill="#F75C03" stroke="#1a1a2e" strokeWidth={2} />
         ))}
 
         {/* month labels */}

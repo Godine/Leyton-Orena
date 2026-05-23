@@ -15,12 +15,12 @@ export default function Toast() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 360, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-          className="fixed bottom-6 right-6 z-50 max-w-[min(360px,calc(100vw-3rem))]"
+          className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 max-w-[min(360px,calc(100vw-2rem))]"
         >
           <button
             onClick={() => { setOpen(true); dismiss() }}
             className="group w-full text-left bg-arena-surface border border-arena-border rounded-2xl shadow-2xl pl-4 pr-3 py-3 flex items-start gap-3"
-            style={{ boxShadow: `0 8px 32px ${(NOTIF_KINDS[toast.kind]?.accent ?? '#58cc02')}33` }}
+            style={{ boxShadow: `0 8px 32px ${(NOTIF_KINDS[toast.kind]?.accent ?? '#F75C03')}33` }}
           >
             <span
               className="h-9 w-9 rounded-xl grid place-items-center shrink-0"

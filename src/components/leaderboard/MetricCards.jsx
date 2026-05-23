@@ -43,18 +43,18 @@ export default function MetricCards({ totals, periodLabel }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 * i, duration: 0.3 }}
-          className="arena-card p-4"
+          className="arena-card p-3 sm:p-4 min-w-0"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold truncate">
               {card.label}
             </span>
-            <card.icon size={16} className={card.accent} strokeWidth={2.4} />
+            <card.icon size={16} className={`${card.accent} shrink-0`} strokeWidth={2.4} />
           </div>
-          <div className="mt-2 text-2xl md:text-3xl font-display font-black text-arena-ink">
+          <div className="mt-2 text-xl sm:text-2xl md:text-3xl font-display font-black text-arena-ink truncate">
             <AnimatedCounter value={card.value} format={card.format} />
           </div>
-          <div className="text-[11px] text-arena-muted mt-0.5">{periodLabel} · team</div>
+          <div className="text-[11px] text-arena-muted mt-0.5 truncate">{periodLabel} · team</div>
         </motion.div>
       ))}
     </div>

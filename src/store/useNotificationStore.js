@@ -5,7 +5,7 @@ import { Award, TrendingUp, Trophy, Target, Flame, PartyPopper } from 'lucide-re
 // can render a notification consistently.
 export const NOTIF_KINDS = {
   badge:     { icon: Award,        accent: '#ce82ff' }, // epic-ish purple
-  rank:      { icon: TrendingUp,   accent: '#58cc02' },
+  rank:      { icon: TrendingUp,   accent: '#F75C03' },
   record:    { icon: Trophy,       accent: '#ffc800' },
   challenge: { icon: Target,       accent: '#1cb0f6' },
   streak:    { icon: Flame,        accent: '#ff4b4b' },

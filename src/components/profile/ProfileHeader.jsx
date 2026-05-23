@@ -17,7 +17,7 @@ export default function ProfileHeader({ consultant, totals, joinDate = 'Mar 2022
       <div className="flex items-center gap-4">
         <div
           className="h-16 w-16 md:h-20 md:w-20 rounded-2xl grid place-items-center font-display font-black text-arena-bg text-xl md:text-2xl"
-          style={{ background: 'linear-gradient(135deg, #58cc02, #ffc800)', boxShadow: '0 0 28px rgba(88,204,2,0.35)' }}
+          style={{ background: 'linear-gradient(135deg, #F75C03, #ffc800)', boxShadow: '0 0 28px rgba(247, 92, 3,0.35)' }}
         >
           {initials(consultant.name)}
         </div>

@@ -42,7 +42,7 @@ export default function Admin() {
           icon={PlayCircle}
           title="Demo Mode"
           body={demoMode ? 'Rotating consultants + sample toasts.' : 'Off — toggle to start the show.'}
-          accent={demoMode ? '#58cc02' : '#a0a0c0'}
+          accent={demoMode ? '#F75C03' : '#a0a0c0'}
         >
           <Toggle value={demoMode} onChange={setDemoMode} label={demoMode ? 'On' : 'Off'} />
         </ActionTile>

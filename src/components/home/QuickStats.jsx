@@ -37,30 +37,32 @@ export default function QuickStats({ stats }) {
     },
   ]
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {cards.map((card, i) => (
         <motion.div
           key={card.label}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 * i, type: 'spring', stiffness: 240, damping: 22 }}
-          className="arena-card p-4 flex items-center gap-4"
+          className="arena-card p-3 sm:p-4 flex items-center gap-3 sm:gap-4 min-w-0"
         >
           {card.value != null && (
-            <ProgressRing ratio={card.ratio} size={72} stroke={7} color={pickRingColor(card.ratio)}>
-              <card.icon size={18} className="text-arena-ink" strokeWidth={2.4} />
-            </ProgressRing>
+            <div className="shrink-0">
+              <ProgressRing ratio={card.ratio} size={64} stroke={6} color={pickRingColor(card.ratio)}>
+                <card.icon size={16} className="text-arena-ink" strokeWidth={2.4} />
+              </ProgressRing>
+            </div>
           )}
           {card.rank != null && (
-            <div className="h-[72px] w-[72px] grid place-items-center rounded-2xl bg-arena-bg/60 border border-arena-border">
-              <Trophy className="text-accent-amber" size={26} strokeWidth={2.4} />
+            <div className="h-16 w-16 shrink-0 grid place-items-center rounded-2xl bg-arena-bg/60 border border-arena-border">
+              <Trophy className="text-accent-amber" size={24} strokeWidth={2.4} />
             </div>
           )}
           {card.streak != null && (
-            <div className="h-[72px] w-[72px] grid place-items-center rounded-2xl bg-arena-bg/60 border border-arena-border">
+            <div className="h-16 w-16 shrink-0 grid place-items-center rounded-2xl bg-arena-bg/60 border border-arena-border">
               <Flame
                 className="text-accent-coral animate-flame"
-                size={30}
+                size={28}
                 fill="currentColor"
                 strokeWidth={1.5}
                 style={{ filter: 'drop-shadow(0 0 10px rgba(255,75,75,0.55))' }}
@@ -69,20 +71,20 @@ export default function QuickStats({ stats }) {
           )}
 
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold truncate">
               {card.label}
             </div>
             {card.value != null && (
               <>
-                <div className="font-display font-black text-arena-ink text-xl truncate">
+                <div className="font-display font-black text-arena-ink text-lg sm:text-xl truncate">
                   <AnimatedCounter value={card.value} format={card.format} />
                 </div>
-                <div className="text-[11px] text-arena-muted">{card.sub}</div>
+                <div className="text-[11px] text-arena-muted truncate">{card.sub}</div>
               </>
             )}
             {card.rank != null && (
               <>
-                <div className="font-display font-black text-arena-ink text-xl">
+                <div className="font-display font-black text-arena-ink text-lg sm:text-xl truncate">
                   #{card.rank}{' '}
                   <span className="text-arena-muted text-sm">/ {card.rankTotal}</span>
                 </div>
@@ -91,10 +93,10 @@ export default function QuickStats({ stats }) {
             )}
             {card.streak != null && (
               <>
-                <div className="font-display font-black text-arena-ink text-xl">
+                <div className="font-display font-black text-arena-ink text-lg sm:text-xl truncate">
                   {card.streak} mo
                 </div>
-                <div className="text-[11px] text-arena-muted">best ever {card.best}</div>
+                <div className="text-[11px] text-arena-muted truncate">best ever {card.best}</div>
               </>
             )}
           </div>

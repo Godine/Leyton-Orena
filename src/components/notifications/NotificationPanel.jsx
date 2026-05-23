@@ -59,7 +59,7 @@ export default function NotificationPanel() {
                   {!n.read && (
                     <span
                       className="absolute left-0 w-[3px] h-full -ml-4"
-                      style={{ background: '#58cc02' }}
+                      style={{ background: '#F75C03' }}
                     />
                   )}
                   <span

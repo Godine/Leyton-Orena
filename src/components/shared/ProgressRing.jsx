@@ -6,7 +6,7 @@ export default function ProgressRing({
   ratio = 0,
   size = 96,
   stroke = 8,
-  color = '#58cc02',
+  color = '#F75C03',
   trackColor = 'rgba(255,255,255,0.06)',
   children,
   pulse = false,
@@ -53,7 +53,7 @@ export default function ProgressRing({
 export function pickRingColor(ratio, betterWhenLower = false) {
   // Normalise: for "better when lower", higher ratio is still better in our calc.
   const r = Math.max(0, Math.min(1.2, ratio))
-  if (r >= 0.85) return '#58cc02' // green
+  if (r >= 0.85) return '#F75C03' // green
   if (r >= 0.55) return '#ffc800' // amber
   return '#ff4b4b'                // coral
   // betterWhenLower is reserved for future asymmetric logic

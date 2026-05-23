@@ -43,9 +43,31 @@ export default function PerformanceRings({ currentMonth, teamAverages }) {
         const compare = teamAverages?.[card.key] ?? 0
         const { ratio, color, comparisonLabel } = ringFor(card.key, value, compare)
         return (
-          <div key={card.key} className="arena-card p-4 flex flex-col items-center text-center">
-            <ProgressRing ratio={ratio} size={108} stroke={9} color={color}>
-              <div className="text-center">
+          <div key={card.key} className="arena-card p-3 sm:p-4 flex flex-col items-center text-center min-w-0">
+            <ProgressRing
+              ratio={ratio}
+              size={88}
+              stroke={8}
+              color={color}
+              className="md:hidden"
+            >
+              <div className="text-center px-1">
+                <div className="font-display font-black text-arena-ink text-sm leading-none truncate max-w-[64px] mx-auto">
+                  {card.format(value)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.14em] text-arena-muted mt-1">
+                  {Math.round(ratio * 100)}%
+                </div>
+              </div>
+            </ProgressRing>
+            <ProgressRing
+              ratio={ratio}
+              size={108}
+              stroke={9}
+              color={color}
+              className="hidden md:grid"
+            >
+              <div className="text-center px-1">
                 <div className="font-display font-black text-arena-ink text-base md:text-lg leading-none">
                   {card.format(value)}
                 </div>
@@ -54,8 +76,8 @@ export default function PerformanceRings({ currentMonth, teamAverages }) {
                 </div>
               </div>
             </ProgressRing>
-            <div className="mt-3 font-display font-bold text-arena-ink text-sm">{card.label}</div>
-            <div className="text-[11px] text-arena-muted mt-0.5">{comparisonLabel}</div>
+            <div className="mt-3 font-display font-bold text-arena-ink text-xs sm:text-sm truncate w-full">{card.label}</div>
+            <div className="text-[11px] text-arena-muted mt-0.5 truncate w-full">{comparisonLabel}</div>
           </div>
         )
       })}

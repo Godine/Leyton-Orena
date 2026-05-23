@@ -12,9 +12,9 @@ import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 
 const JOIN_DATES = {
   'c-01': 'Mar 2022', 'c-02': 'Jun 2023', 'c-03': 'Sep 2021', 'c-04': 'Jan 2024',
-  'c-05': 'Apr 2022', 'c-06': 'Nov 2023', 'c-07': 'Feb 2022', 'c-08': 'Aug 2024',
-  'c-09': 'May 2020', 'c-10': 'Sep 2022', 'c-11': 'Jul 2023', 'c-12': 'Oct 2024',
-  'c-13': 'Mar 2021', 'c-14': 'Dec 2023', 'c-15': 'Jun 2022', 'c-16': 'Feb 2024',
+  'c-05': 'Apr 2022', 'c-06': 'Nov 2023', 'c-07': 'Feb 2022',
+  'c-08': 'May 2020', 'c-09': 'Sep 2022', 'c-10': 'Jul 2023', 'c-11': 'Oct 2024',
+  'c-12': 'Mar 2021', 'c-13': 'Dec 2023',
 }
 
 export default function Profile() {

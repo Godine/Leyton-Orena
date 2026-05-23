@@ -125,7 +125,7 @@ function FilterBar({ rarityFilter, setRarityFilter, earnedOnly, setEarnedOnly })
               style={
                 active
                   ? r === 'all'
-                    ? { background: '#58cc02', boxShadow: '0 0 18px rgba(88,204,2,0.4)' }
+                    ? { background: '#F75C03', boxShadow: '0 0 18px rgba(247, 92, 3,0.4)' }
                     : { background: hex, boxShadow: `0 0 18px ${hex}66` }
                   : undefined
               }

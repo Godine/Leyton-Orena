@@ -6,8 +6,8 @@ export default function SparkLine({
   values = [],
   width = 80,
   height = 24,
-  stroke = '#58cc02',
-  fill = 'rgba(88, 204, 2, 0.18)',
+  stroke = '#F75C03',
+  fill = 'rgba(247, 92, 3, 0.18)',
   className = '',
 }) {
   if (!values.length) return null

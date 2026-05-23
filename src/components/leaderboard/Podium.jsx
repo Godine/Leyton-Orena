@@ -70,8 +70,8 @@ function PodiumCard({ row, rank, sortKey, height, delay }) {
           values={row.sparkline}
           width={isFirst ? 110 : 90}
           height={isFirst ? 28 : 24}
-          stroke={isFirst ? '#ffc800' : '#58cc02'}
-          fill={isFirst ? 'rgba(255,200,0,0.18)' : 'rgba(88,204,2,0.15)'}
+          stroke={isFirst ? '#ffc800' : '#F75C03'}
+          fill={isFirst ? 'rgba(255,200,0,0.18)' : 'rgba(247, 92, 3,0.15)'}
         />
       </div>
       <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-arena-muted">last 6 months</div>
