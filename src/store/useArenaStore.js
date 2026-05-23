@@ -18,6 +18,28 @@ export const useArenaStore = create((set, get) => ({
   setCurrentUserId: (id) => set({ currentUserId: id }),
   getCurrentUser: () => get().consultants.find((c) => c.id === get().currentUserId),
 
+  // mutate a single month's stats for a consultant (used by Admin editing)
+  setConsultantMonth: (consultantId, month, patch) =>
+    set((state) => ({
+      consultants: state.consultants.map((c) =>
+        c.id !== consultantId
+          ? c
+          : {
+              ...c,
+              monthlyStats: c.monthlyStats.map((s) =>
+                s.month === month ? { ...s, ...patch } : s,
+              ),
+            },
+      ),
+    })),
+
+  // demo / presentation mode
+  demoMode: false,
+  setDemoMode: (v) => set({ demoMode: v }),
+
+  walkthroughOpen: false,
+  setWalkthroughOpen: (v) => set({ walkthroughOpen: v }),
+
   // unlock animations seen this session (keyed by `${userId}:${badgeId}`)
   seenUnlocks: {},
   markUnlockSeen: (userId, badgeId) =>

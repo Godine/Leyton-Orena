@@ -68,7 +68,7 @@ export default function Home() {
   const computedChallenges = useMemo(
     () => challenges.map((c) => ({
       challenge: c,
-      progress: c.progressFn(currentUser, consultants, latestMonth),
+      progress: c.progressFn(currentUser, consultants, latestMonth, c),
     })),
     [challenges, currentUser, consultants, latestMonth],
   )

@@ -82,6 +82,8 @@ export const useNotificationStore = create((set, get) => ({
     set({ notifications: get().notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) }),
   markAllRead: () =>
     set({ notifications: get().notifications.map((n) => ({ ...n, read: true })) }),
+  markAllUnread: () =>
+    set({ notifications: get().notifications.map((n) => ({ ...n, read: false })) }),
 
   addNotification: (n) => {
     const next = { id: `n-${Date.now()}`, at: Date.now(), read: false, ...n }

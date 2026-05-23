@@ -85,17 +85,20 @@ export default function Podium({ rows, sortKey }) {
   const second = rows[1]
   const third = rows[2]
 
-  // visual order on desktop: 2nd, 1st, 3rd
+  // Desktop renders 2nd · 1st · 3rd (1st elevated in the middle).
+  // Mobile stacks 1st · 2nd · 3rd (first place on top), driven by `order-*`.
   const slots = [
-    { row: second, rank: 2, height: 230, delay: 0.15 },
-    { row: first,  rank: 1, height: 270, delay: 0.0 },
-    { row: third,  rank: 3, height: 220, delay: 0.25 },
+    { row: second, rank: 2, height: 230, delay: 0.15, order: 'order-2 md:order-1' },
+    { row: first,  rank: 1, height: 270, delay: 0.0,  order: 'order-1 md:order-2' },
+    { row: third,  rank: 3, height: 220, delay: 0.25, order: 'order-3 md:order-3' },
   ].filter((s) => s.row)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
       {slots.map((s) => (
-        <PodiumCard key={s.row.consultant.id} {...s} sortKey={sortKey} />
+        <div key={s.row.consultant.id} className={s.order}>
+          <PodiumCard {...s} sortKey={sortKey} />
+        </div>
       ))}
     </div>
   )
