@@ -59,6 +59,10 @@ export default {
           '60%': { transform: 'scale(1.03)', opacity: '1' },
           '100%': { transform: 'scale(1)' },
         },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%) skewX(-12deg)' },
+          '100%': { transform: 'translateX(200%) skewX(-12deg)' },
+        },
       },
       animation: {
         pulseRing: 'pulseRing 2.4s ease-in-out infinite',

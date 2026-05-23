@@ -17,6 +17,15 @@ export const useArenaStore = create((set, get) => ({
   currentUserId: CURRENT_USER_ID,
   getCurrentUser: () => get().consultants.find((c) => c.id === get().currentUserId),
 
+  // unlock animations seen this session (keyed by `${userId}:${badgeId}`)
+  seenUnlocks: {},
+  markUnlockSeen: (userId, badgeId) =>
+    set((state) => ({
+      seenUnlocks: { ...state.seenUnlocks, [`${userId}:${badgeId}`]: true },
+    })),
+  hasSeenUnlock: (userId, badgeId) =>
+    Boolean(get().seenUnlocks[`${userId}:${badgeId}`]),
+
   // selectors
   getByRole: (role) => get().consultants.filter((c) => c.role === role),
   getById: (id) => get().consultants.find((c) => c.id === id),

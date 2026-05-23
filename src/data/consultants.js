@@ -68,12 +68,27 @@ const SEED = [
   { name: 'Lucas Moreau',     role: 'Financial', location: 'Dublin',     profile: 'inconsistent', streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 2 }, badges: ['lab-rat','retention-shield'] },
 ]
 
+// Deterministically spreads a consultant's earned badges across the 6 months.
+// Current user (idx 0) always has their final badge land in the latest month so
+// the unlock animation has something to play on first visit.
+function buildBadgeEarnedAt(badges, idx) {
+  const map = {}
+  badges.forEach((badgeId, bi) => {
+    const slot = idx === 0 && bi === badges.length - 1
+      ? MONTHS.length - 1
+      : (bi + idx) % MONTHS.length
+    map[badgeId] = MONTHS[slot]
+  })
+  return map
+}
+
 export const CONSULTANTS = SEED.map((c, idx) => ({
   id: `c-${String(idx + 1).padStart(2, '0')}`,
   name: c.name,
   role: c.role,
   location: c.location,
   badges: c.badges,
+  badgeEarnedAt: buildBadgeEarnedAt(c.badges, idx),
   streaks: c.streak,
   monthlyStats: buildMonthlyStats(c.profile, (idx % 4) - 1),
 }))
