@@ -17,4 +17,10 @@ export const formatPct = (v, digits = 0) => `${(v ?? 0).toFixed(digits)}%`
 export const formatDays = (v) => `${(v ?? 0).toFixed(1)}d`
 export const formatInt = (v) => new Intl.NumberFormat('en-GB').format(Math.round(v ?? 0))
 
-export const LOCATION_CODE = { London: 'LDN', Casablanca: 'CAS', Dublin: 'DUB' }
+export const LOCATION_CODE = {
+  London: 'LDN',
+  Casablanca: 'CAS',
+  Dublin: 'DUB',
+  Glasgow: 'GLA',
+  Bristol: 'BRI',
+}

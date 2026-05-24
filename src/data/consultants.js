@@ -68,6 +68,18 @@ const SEED = [
   { name: 'Safae El Kalai',      role: 'Financial', location: 'Casablanca', profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
   { name: 'Israe Rouri',         role: 'Financial', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','peak-month','on-fire','sniper'] },
   { name: 'Douae El Boukili',    role: 'Financial', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','early-bird'] },
+  // Financial — extended roster
+  { name: 'Ibtissam Boutrasseyt',role: 'Financial', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 5 }, badges: ['front-loader','on-fire','diamond-hands','peak-month'] },
+  { name: 'Aveen Farag',         role: 'Financial', location: 'Casablanca', profile: 'improving',    streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 2 }, badges: ['ice-breaker','growth-engine'] },
+  { name: 'Basma Rabeh',         role: 'Financial', location: 'Casablanca', profile: 'steady',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['lab-rat','iron-wall','early-bird'] },
+  { name: 'Scott Toner',         role: 'Financial', location: 'Glasgow',    profile: 'strong',       streak: { currentMonthlyStreak: 5, bestMonthlyStreak: 5 }, badges: ['front-loader','on-fire','sniper','arena-champion'] },
+  { name: 'Jennifer Woo',        role: 'Financial', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 4, bestMonthlyStreak: 6 }, badges: ['peak-month','diamond-hands','on-fire','client-whisperer'] },
+  { name: 'Robert Strutt',       role: 'Financial', location: 'London',     profile: 'inconsistent', streak: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick'] },
+  { name: 'Marco Spiro',         role: 'Financial', location: 'London',     profile: 'steady',       streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 4 }, badges: ['lab-rat','retention-shield','early-bird'] },
+  { name: 'Rebecca Black',       role: 'Financial', location: 'Bristol',    profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','sniper'] },
+  { name: 'David Kerr',          role: 'Financial', location: 'Glasgow',    profile: 'steady',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['iron-wall','sniper','early-bird'] },
+  { name: 'Soufiane Mlah',       role: 'Financial', location: 'Casablanca', profile: 'inconsistent', streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick','retention-shield'] },
+  { name: 'Charlie Monger',      role: 'Financial', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['front-loader','on-fire','diamond-hands'] },
 ]
 
 // Deterministically spreads a consultant's earned badges across the 6 months.

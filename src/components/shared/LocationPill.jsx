@@ -1,9 +1,11 @@
 import { LOCATION_CODE } from '../../utils/formatters.js'
 
 const STYLES = {
-  London:     'bg-location-london/20  text-slate-300  ring-location-london/40',
-  Casablanca: 'bg-location-casablanca/20 text-amber-300 ring-location-casablanca/40',
-  Dublin:     'bg-location-dublin/20  text-emerald-300 ring-location-dublin/40',
+  London:     'bg-location-london/20    text-slate-300   ring-location-london/40',
+  Casablanca: 'bg-location-casablanca/20 text-amber-300  ring-location-casablanca/40',
+  Dublin:     'bg-location-dublin/20    text-emerald-300 ring-location-dublin/40',
+  Glasgow:    'bg-sky-500/20            text-sky-300     ring-sky-500/40',
+  Bristol:    'bg-rose-500/20           text-rose-300    ring-rose-500/40',
 }
 
 export default function LocationPill({ location, className = '' }) {

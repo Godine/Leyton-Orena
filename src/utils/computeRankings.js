@@ -13,7 +13,7 @@ export const PERIODS = [
   { key: 'all',     label: 'All Time',     monthsBack: Infinity },
 ]
 
-export const LOCATIONS = ['All', 'London', 'Casablanca', 'Dublin']
+export const LOCATIONS = ['All', 'London', 'Casablanca', 'Dublin', 'Glasgow', 'Bristol']
 
 // Returns the slice of months (sorted ascending) used for a given period.
 export function getPeriodMonths(allMonthsSorted, periodKey) {
