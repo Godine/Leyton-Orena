@@ -123,18 +123,45 @@ function deriveEarlyTierBadges(monthlyStats) {
   return { earned, earnedAt }
 }
 
+// Progressive monthly-target-streak ladder. Best (lifetime) streak unlocks tiers.
+const STREAK_TIERS = [
+  { id: 'kindling',  threshold: 2 },
+  { id: 'on-fire',   threshold: 3 },
+  { id: 'heatwave',  threshold: 4 },
+  { id: 'inferno',   threshold: 5 },
+  { id: 'supernova', threshold: 6 },
+]
+
+function deriveStreakTierBadges(streaks) {
+  const best = streaks?.bestMonthlyStreak ?? 0
+  const latest = MONTHS.at(-1)
+  const earned = []
+  const earnedAt = {}
+  for (const tier of STREAK_TIERS) {
+    if (best >= tier.threshold) {
+      earned.push(tier.id)
+      // We don't know which calendar month each tier was first hit; attribute
+      // them to the latest tracked month so they show up as recent unlocks.
+      earnedAt[tier.id] = latest
+    }
+  }
+  return { earned, earnedAt }
+}
+
 export const CONSULTANTS = SEED.map((c, idx) => {
   const monthlyStats = buildMonthlyStats(c.profile, (idx % 4) - 1)
-  const tier = deriveEarlyTierBadges(monthlyStats)
-  // De-dupe: SEED.badges may already mention some tier ids (legacy front-loader).
-  const badges = Array.from(new Set([...c.badges, ...tier.earned]))
+  const earlyTier = deriveEarlyTierBadges(monthlyStats)
+  const streakTier = deriveStreakTierBadges(c.streak)
+  // De-dupe: SEED.badges may already mention some tier ids (legacy front-loader, on-fire).
+  const badges = Array.from(new Set([...c.badges, ...earlyTier.earned, ...streakTier.earned]))
+  const derivedAt = { ...earlyTier.earnedAt, ...streakTier.earnedAt }
   return {
     id: `c-${String(idx + 1).padStart(2, '0')}`,
     name: c.name,
     role: c.role,
     location: c.location,
     badges,
-    badgeEarnedAt: buildBadgeEarnedAt(badges, idx, tier.earnedAt),
+    badgeEarnedAt: buildBadgeEarnedAt(badges, idx, derivedAt),
     streaks: c.streak,
     monthlyStats,
   }

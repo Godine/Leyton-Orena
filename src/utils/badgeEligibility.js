@@ -45,6 +45,15 @@ const EARLY_TIER_TARGETS = {
   untouchable:  90,
 }
 
+// Mapping for the consecutive-target-hit ladder (in months of best streak).
+const STREAK_TIER_TARGETS = {
+  kindling:  2,
+  'on-fire': 3,
+  heatwave:  4,
+  inferno:   5,
+  supernova: 6,
+}
+
 export function badgeProgress(consultant, badgeId) {
   const stats = consultant.monthlyStats ?? []
   if (EARLY_TIER_TARGETS[badgeId] != null) {
@@ -52,11 +61,16 @@ export function badgeProgress(consultant, badgeId) {
     const best = bestMonth(stats, 'invoiceBeforeDay15Pct')
     return { value: best, target, ratio: Math.min(1, best / target), unit: '%' }
   }
+  if (STREAK_TIER_TARGETS[badgeId] != null) {
+    const target = STREAK_TIER_TARGETS[badgeId]
+    // Progress reflects the *current* live streak so consultants can see how
+    // close they are to the next tier right now.
+    const current = consultant.streaks?.currentMonthlyStreak ?? 0
+    const best = consultant.streaks?.bestMonthlyStreak ?? 0
+    const value = Math.max(current, best)
+    return { value, target, ratio: Math.min(1, value / target), unit: 'mo streak' }
+  }
   switch (badgeId) {
-    case 'on-fire': {
-      const v = consultant.streaks?.currentMonthlyStreak ?? 0
-      return { value: v, target: 3, ratio: Math.min(1, v / 3), unit: 'mo streak' }
-    }
     case 'diamond-hands': {
       const v = bestMonth(stats, 'opsDelivered')
       return { value: v, target: 10, ratio: Math.min(1, v / 10), unit: 'ops/mo' }
