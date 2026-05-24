@@ -4,7 +4,7 @@ import { NAV_ITEMS } from './navConfig.js'
 export default function BottomTabs() {
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-arena-surface/95 backdrop-blur border-t border-arena-border">
-      <ul className="grid grid-cols-6">
+      <ul className="grid grid-cols-7">
         {NAV_ITEMS.map((item) => (
           <li key={item.to}>
             <NavLink
