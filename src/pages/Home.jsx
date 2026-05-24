@@ -107,6 +107,8 @@ export default function Home() {
         current={currentUser.fire?.current ?? 0}
         best={currentUser.fire?.best ?? 0}
         log={currentUser.fire?.log ?? []}
+        moves={currentUser.fire?.moves ?? []}
+        todayIso={currentUser.fire?.todayIso}
         variant="hero"
       />
 

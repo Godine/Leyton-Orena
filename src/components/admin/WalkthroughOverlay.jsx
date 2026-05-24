@@ -25,6 +25,10 @@ const STEPS = [
     body: 'A Hall of Fame for all-time bests with threat alerts, and a per-consultant profile with rings, trend chart, and streak flame.',
   },
   {
+    title: 'Daily fire',
+    body: 'Every consultant has a daily fire that grows when they advance at least one claim by one stage in the Leyton workflow (Handover → Overview → Scoping → Tech Report → Costs → Assessment → Invoiced).',
+  },
+  {
     title: 'You\'re ready',
     body: 'Use the role switcher in the sidebar and the "view as" selector on Profile to demo different perspectives.',
   },

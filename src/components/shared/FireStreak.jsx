@@ -29,6 +29,8 @@ export default function FireStreak({
   current = 0,
   best = 0,
   log = [],
+  moves = [],
+  todayIso,
   variant = 'hero',
 }) {
   const tier = tierFor(current)
@@ -36,6 +38,7 @@ export default function FireStreak({
   const dots = log.slice(-dotsCount)
   const isPersonalBest = current > 0 && current >= best
   const hero = variant === 'hero'
+  const todayMoves = todayIso ? moves.filter((m) => m.date === todayIso) : []
 
   return (
     <section
@@ -142,6 +145,45 @@ export default function FireStreak({
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Today's stage moves — the actual claim advances feeding the fire */}
+      {todayMoves.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold mb-2">
+            <span>Today's stage moves</span>
+            <span>{todayMoves.length} this fire day</span>
+          </div>
+          <ul className="space-y-1.5">
+            {todayMoves.slice(0, hero ? 4 : 2).map((m, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-2 text-xs rounded-lg bg-arena-bg/40 border border-arena-border px-2.5 py-1.5"
+              >
+                <span className="font-display font-bold text-arena-ink truncate flex-1 min-w-0">
+                  {m.client}
+                </span>
+                <span className="text-arena-muted text-[11px] truncate">
+                  {m.fromStage}
+                </span>
+                <span style={{ color: tier.color }} className="font-display font-black text-[11px]">→</span>
+                <span style={{ color: tier.color }} className="font-display font-bold text-[11px] truncate">
+                  {m.toStage}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {todayMoves.length > (hero ? 4 : 2) && (
+            <div className="mt-1.5 text-[10px] text-arena-muted text-right">
+              +{todayMoves.length - (hero ? 4 : 2)} more
+            </div>
+          )}
+        </div>
+      )}
+      {current > 0 && todayMoves.length === 0 && (
+        <div className="mt-4 text-[11px] text-arena-muted">
+          Streak alive from earlier days — move a claim by one stage today to keep it lit.
         </div>
       )}
     </section>

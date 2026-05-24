@@ -124,6 +124,8 @@ export default function Profile() {
             current={consultant.fire?.current ?? 0}
             best={consultant.fire?.best ?? 0}
             log={consultant.fire?.log ?? []}
+            moves={consultant.fire?.moves ?? []}
+            todayIso={consultant.fire?.todayIso}
             variant="mini"
           />
           <StreakDisplay

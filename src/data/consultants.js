@@ -127,6 +127,8 @@ function deriveEarlyTierBadges(monthlyStats) {
 // one claim by one workflow stage today?". 30-day window ending today.
 // Current and best are designed per profile so streaks look believable; older
 // days are filled in deterministically by a tiny hash for stable demos.
+import { STAGES, clientsForConsultant } from './workflow.js'
+
 const FIRE_BY_PROFILE = {
   strong:       { current: 11, best: 18, density: 80 },
   improving:    { current: 7,  best: 9,  density: 65 },
@@ -135,6 +137,8 @@ const FIRE_BY_PROFILE = {
 }
 
 const FIRE_LOG_LEN = 30
+
+function isoDate(d) { return d.toISOString().slice(0, 10) }
 
 function buildFireData(profile, idx) {
   const cfg = FIRE_BY_PROFILE[profile] ?? FIRE_BY_PROFILE.steady
@@ -151,7 +155,47 @@ function buildFireData(profile, idx) {
     const h = ((idx + 1) * 37 + i * 13 + 7) % 100
     log[i] = h < cfg.density ? 1 : 0
   }
-  return { current: cfg.current, best: cfg.best, log }
+
+  // Replay each lit day as a real stage advance on one of the consultant's
+  // active claims. Round-robin picks the claim that's furthest behind so the
+  // pipeline progresses evenly; once a claim hits Invoiced it's swapped out.
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const clients = clientsForConsultant(idx, 4)
+  const claimStages = clients.map(() => 0)
+  const moves = []
+
+  for (let i = 0; i < log.length; i++) {
+    if (log[i] !== 1) continue
+    // find claim furthest behind
+    let pick = 0
+    for (let c = 1; c < claimStages.length; c++) {
+      if (claimStages[c] < claimStages[pick]) pick = c
+    }
+    if (claimStages[pick] >= STAGES.length - 1) {
+      // all claims invoiced — shouldn't happen with 4 claims and 30 days,
+      // but stay safe by skipping rather than mutating the log.
+      continue
+    }
+    const date = new Date(today)
+    date.setDate(date.getDate() - (log.length - 1 - i))
+    const fromStage = STAGES[claimStages[pick]]
+    claimStages[pick] += 1
+    const toStage = STAGES[claimStages[pick]]
+    moves.push({
+      date: isoDate(date),
+      client: clients[pick],
+      fromStage,
+      toStage,
+    })
+  }
+
+  return {
+    current: cfg.current,
+    best: cfg.best,
+    log,
+    moves,
+    todayIso: isoDate(today),
+  }
 }
 
 // Progressive monthly-target-streak ladder. Best (lifetime) streak unlocks tiers.
