@@ -1,6 +1,6 @@
 import { ChevronRight, Lock } from 'lucide-react'
 
-const RARITY_HEX = { common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800' }
+const RARITY_HEX = { common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF' }
 
 export default function BadgeShowcase({ earnedBadges, nextBadge, onOpenBadge }) {
   return (

@@ -85,9 +85,13 @@ const SEED = [
 // Deterministically spreads a consultant's earned badges across the 6 months.
 // Current user (idx 0) always has their final badge land in the latest month so
 // the unlock animation has something to play on first visit.
-function buildBadgeEarnedAt(badges, idx) {
+function buildBadgeEarnedAt(badges, idx, derivedAt = {}) {
   const map = {}
   badges.forEach((badgeId, bi) => {
+    if (derivedAt[badgeId]) {
+      map[badgeId] = derivedAt[badgeId]
+      return
+    }
     const slot = idx === 0 && bi === badges.length - 1
       ? MONTHS.length - 1
       : (bi + idx) % MONTHS.length
@@ -96,16 +100,45 @@ function buildBadgeEarnedAt(badges, idx) {
   return map
 }
 
-export const CONSULTANTS = SEED.map((c, idx) => ({
-  id: `c-${String(idx + 1).padStart(2, '0')}`,
-  name: c.name,
-  role: c.role,
-  location: c.location,
-  badges: c.badges,
-  badgeEarnedAt: buildBadgeEarnedAt(c.badges, idx),
-  streaks: c.streak,
-  monthlyStats: buildMonthlyStats(c.profile, (idx % 4) - 1),
-}))
+// Progressive early-invoice ladder: badge id + threshold for invoiceBeforeDay15Pct.
+// Each consultant unlocks every tier they cleared in any month.
+const EARLY_TIERS = [
+  { id: 'pacemaker',    threshold: 50 },
+  { id: 'front-runner', threshold: 60 },
+  { id: 'cash-closer',  threshold: 70 },
+  { id: 'front-loader', threshold: 80 },
+  { id: 'untouchable',  threshold: 90 },
+]
+
+function deriveEarlyTierBadges(monthlyStats) {
+  const earned = []
+  const earnedAt = {}
+  for (const tier of EARLY_TIERS) {
+    const hit = monthlyStats.find((s) => (s.invoiceBeforeDay15Pct ?? 0) >= tier.threshold)
+    if (hit) {
+      earned.push(tier.id)
+      earnedAt[tier.id] = hit.month
+    }
+  }
+  return { earned, earnedAt }
+}
+
+export const CONSULTANTS = SEED.map((c, idx) => {
+  const monthlyStats = buildMonthlyStats(c.profile, (idx % 4) - 1)
+  const tier = deriveEarlyTierBadges(monthlyStats)
+  // De-dupe: SEED.badges may already mention some tier ids (legacy front-loader).
+  const badges = Array.from(new Set([...c.badges, ...tier.earned]))
+  return {
+    id: `c-${String(idx + 1).padStart(2, '0')}`,
+    name: c.name,
+    role: c.role,
+    location: c.location,
+    badges,
+    badgeEarnedAt: buildBadgeEarnedAt(badges, idx, tier.earnedAt),
+    streaks: c.streak,
+    monthlyStats,
+  }
+})
 
 export const MONTHS_AVAILABLE = MONTHS
 export const CURRENT_USER_ID = 'c-01' // Oumayma, for "My Profile"

@@ -36,13 +36,23 @@ function bestQuarterSum(stats, key) {
   return best
 }
 
+// Mapping for the early-invoice progression ladder.
+const EARLY_TIER_TARGETS = {
+  pacemaker:    50,
+  'front-runner': 60,
+  'cash-closer':  70,
+  'front-loader': 80,
+  untouchable:  90,
+}
+
 export function badgeProgress(consultant, badgeId) {
   const stats = consultant.monthlyStats ?? []
+  if (EARLY_TIER_TARGETS[badgeId] != null) {
+    const target = EARLY_TIER_TARGETS[badgeId]
+    const best = bestMonth(stats, 'invoiceBeforeDay15Pct')
+    return { value: best, target, ratio: Math.min(1, best / target), unit: '%' }
+  }
   switch (badgeId) {
-    case 'front-loader': {
-      const best = bestMonth(stats, 'invoiceBeforeDay15Pct')
-      return { value: best, target: 80, ratio: Math.min(1, best / 80), unit: '%' }
-    }
     case 'on-fire': {
       const v = consultant.streaks?.currentMonthlyStreak ?? 0
       return { value: v, target: 3, ratio: Math.min(1, v / 3), unit: 'mo streak' }

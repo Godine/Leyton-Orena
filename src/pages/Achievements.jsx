@@ -8,9 +8,9 @@ import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 import ProgressSummary from '../components/achievements/ProgressSummary.jsx'
 
 const RARITY_HEX = {
-  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800',
+  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF',
 }
-const RARITIES = ['all', 'common', 'rare', 'epic', 'legendary']
+const RARITIES = ['all', 'common', 'rare', 'epic', 'legendary', 'mythic']
 
 export default function Achievements() {
   const allBadges = useArenaStore((s) => s.badges)
@@ -37,7 +37,7 @@ export default function Achievements() {
   }, [allBadges, rarityFilter, earnedOnly, earnedMap])
 
   const rarityCounts = useMemo(() => {
-    const counts = { common: 0, rare: 0, epic: 0, legendary: 0 }
+    const counts = { common: 0, rare: 0, epic: 0, legendary: 0, mythic: 0 }
     for (const id of earnedBadgeIds) {
       const b = allBadges.find((x) => x.id === id)
       if (b) counts[b.rarity] += 1

@@ -6,7 +6,7 @@ import { badgeProgress } from '../../utils/badgeEligibility.js'
 import LocationPill from '../shared/LocationPill.jsx'
 
 const RARITY_HEX = {
-  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800',
+  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF',
 }
 
 export default function BadgeDetailModal({

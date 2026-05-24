@@ -3,7 +3,7 @@ import { Sparkles, ChevronRight } from 'lucide-react'
 import { RARITY_STYLES } from '../../data/badges.js'
 
 const RARITY_HEX = {
-  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800',
+  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF',
 }
 
 export default function ProgressSummary({
@@ -51,7 +51,7 @@ export default function ProgressSummary({
 
           {/* rarity breakdown */}
           <div className="mt-4 flex flex-wrap gap-2">
-            {['common', 'rare', 'epic', 'legendary'].map((r) => (
+            {['common', 'rare', 'epic', 'legendary', 'mythic'].map((r) => (
               <span
                 key={r}
                 className="arena-chip"

@@ -9,10 +9,11 @@ const RARITY_GLOW = {
   rare:      '0 0 0 1px rgba(28,176,246,0.35), 0 0 24px rgba(28,176,246,0.18)',
   epic:      '0 0 0 1px rgba(206,130,255,0.45), 0 0 28px rgba(206,130,255,0.22)',
   legendary: '0 0 0 1px rgba(255,200,0,0.55), 0 0 36px rgba(255,200,0,0.28)',
+  mythic:    '0 0 0 1px rgba(45,212,191,0.65), 0 0 40px rgba(45,212,191,0.32)',
 }
 
 const RARITY_HEX = {
-  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800',
+  common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF',
 }
 
 const RARITY_HOVER_FX = {
@@ -20,6 +21,7 @@ const RARITY_HOVER_FX = {
   rare: 'group-hover:shadow-[0_0_28px_rgba(28,176,246,0.35)]',
   epic: 'animate-pulseRing',
   legendary: 'group-hover:animate-pulseRing',
+  mythic: 'animate-pulseRing',
 }
 
 export default function BadgeCard({
@@ -70,7 +72,7 @@ export default function BadgeCard({
         style={{ boxShadow: showAsEarned ? RARITY_GLOW[badge.rarity] : RARITY_GLOW.common }}
       >
         {/* legendary shimmer */}
-        {badge.rarity === 'legendary' && showAsEarned && (
+        {(badge.rarity === 'legendary' || badge.rarity === 'mythic') && showAsEarned && (
           <span className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
             <span className="absolute -inset-x-1/3 top-0 h-full -skew-x-12 bg-gradient-to-r from-transparent via-amber-200/15 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[shimmer_1.4s_ease-in-out]" />
           </span>
