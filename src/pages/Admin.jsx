@@ -22,14 +22,14 @@ export default function Admin() {
   const [editMonth, setEditMonth] = useState(latestMonth)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 xl:space-y-10">
       <header className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow">
             <Settings className="text-accent-coral" size={24} strokeWidth={2.4} />
           </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-black">
+        <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-accent-coral">Admin</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">

@@ -80,14 +80,14 @@ export default function Profile() {
   const nextBadge = useMemo(() => closestToUnlock(consultant, allBadges), [consultant, allBadges])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 xl:space-y-8">
       <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow">
               <User className="text-accent-green" size={24} strokeWidth={2.4} />
             </div>
-            <h1 className="text-3xl md:text-4xl font-display font-black">
+            <h1 className="text-3xl md:text-4xl xl:text-5xl font-display font-black">
               <span className="text-accent-green">My Profile</span>
             </h1>
           </div>
@@ -110,8 +110,8 @@ export default function Profile() {
         <PerformanceRings currentMonth={currentStats} teamAverages={teamAverages} />
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-6">
+        <div className="lg:col-span-2 xl:col-span-3 space-y-4 xl:space-y-6">
           <TrendChart stats={[...consultant.monthlyStats].sort((a, b) => a.month.localeCompare(b.month))} />
           <RankSummary rank={rank} total={total} delta={deltaPositions} role={consultant.role} />
         </div>

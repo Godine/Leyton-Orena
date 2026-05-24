@@ -26,14 +26,14 @@ export default function Records() {
   }))
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 xl:space-y-10">
       <header className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber">
             <Medal className="text-accent-coral" size={24} strokeWidth={2.4} />
           </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-black">
+        <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-accent-coral">Hall of Records</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">
@@ -62,7 +62,7 @@ export default function Records() {
             <span className="h-px flex-1 bg-arena-border" />
             <span className="text-xs text-arena-muted">{group.records.length} records</span>
           </header>
-          <div className="grid gap-3 md:gap-4">
+          <div className="grid xl:grid-cols-2 gap-3 md:gap-4">
             {group.records.map((r) => (
               <RecordCard
                 key={r.id}

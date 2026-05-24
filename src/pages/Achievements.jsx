@@ -54,14 +54,14 @@ export default function Achievements() {
     consultants.filter((c) => c.badges?.includes(badgeId))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 xl:space-y-8">
       <header className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber">
             <Award className="text-arena-amber" size={24} strokeWidth={2.4} />
           </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-black">
+        <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-arena-amber">Achievements</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">

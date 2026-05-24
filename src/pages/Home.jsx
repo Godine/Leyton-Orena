@@ -99,7 +99,7 @@ export default function Home() {
   }, [toastShown, addNotification, markToastShown, currentUser.name, rankInfo.rank, rankInfo.total])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 xl:space-y-10">
       <WelcomeHeader name={currentUser.name} />
 
       <QuickStats stats={quickStats} />
@@ -110,8 +110,8 @@ export default function Home() {
         badgesById={badgesById}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-6">
+        <div className="lg:col-span-2 xl:col-span-3">
           <ActivityFeed />
         </div>
         <div>

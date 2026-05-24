@@ -33,7 +33,7 @@ export default function ChallengesPanel({ challenges, computed, badgesById }) {
         </span>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         {computed.map(({ challenge, progress }, i) => {
           const meta = TYPE_META[challenge.type]
           const ratio = Math.max(0, Math.min(1, progress.ratio))

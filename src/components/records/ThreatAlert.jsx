@@ -18,7 +18,7 @@ export default function ThreatAlert({ count, children }) {
           {count}
         </span>
       </header>
-      <div className="grid gap-3">{children}</div>
+      <div className="grid xl:grid-cols-2 gap-3">{children}</div>
     </motion.section>
   )
 }
