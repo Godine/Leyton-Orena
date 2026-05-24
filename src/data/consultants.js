@@ -123,6 +123,37 @@ function deriveEarlyTierBadges(monthlyStats) {
   return { earned, earnedAt }
 }
 
+// Daily fire streak — fed by the question "did this consultant advance at least
+// one claim by one workflow stage today?". 30-day window ending today.
+// Current and best are designed per profile so streaks look believable; older
+// days are filled in deterministically by a tiny hash for stable demos.
+const FIRE_BY_PROFILE = {
+  strong:       { current: 11, best: 18, density: 80 },
+  improving:    { current: 7,  best: 9,  density: 65 },
+  steady:       { current: 4,  best: 8,  density: 72 },
+  inconsistent: { current: 1,  best: 5,  density: 45 },
+}
+
+const FIRE_LOG_LEN = 30
+
+function buildFireData(profile, idx) {
+  const cfg = FIRE_BY_PROFILE[profile] ?? FIRE_BY_PROFILE.steady
+  const log = new Array(FIRE_LOG_LEN).fill(0)
+  // last `current` days fire
+  for (let i = 0; i < cfg.current && i < FIRE_LOG_LEN; i++) {
+    log[FIRE_LOG_LEN - 1 - i] = 1
+  }
+  // the day before the current streak is the break
+  const breakAt = FIRE_LOG_LEN - 1 - cfg.current
+  if (breakAt >= 0) log[breakAt] = 0
+  // older days: deterministic density fill
+  for (let i = 0; i < breakAt; i++) {
+    const h = ((idx + 1) * 37 + i * 13 + 7) % 100
+    log[i] = h < cfg.density ? 1 : 0
+  }
+  return { current: cfg.current, best: cfg.best, log }
+}
+
 // Progressive monthly-target-streak ladder. Best (lifetime) streak unlocks tiers.
 const STREAK_TIERS = [
   { id: 'kindling',  threshold: 2 },
@@ -164,6 +195,7 @@ export const CONSULTANTS = SEED.map((c, idx) => {
     badgeEarnedAt: buildBadgeEarnedAt(badges, idx, derivedAt),
     streaks: c.streak,
     monthlyStats,
+    fire: buildFireData(c.profile, idx),
   }
 })
 

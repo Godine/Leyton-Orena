@@ -16,6 +16,7 @@ const EVENTS = [
   { kind: 'record', who: 'Antonio De Grazia',   text: 'is closing in on Highest Quarterly Invoice — 92% there.',             ago: '18m ago' },
   { kind: 'rank',   who: 'David Buckley',       text: 'climbed two spots to #3 on the Technical leaderboard.',               ago: '32m ago' },
   { kind: 'streak', who: 'Israe Rouri',         text: 'just hit a 5-month delivery streak 🔥',                                ago: '1h ago' },
+  { kind: 'streak', who: 'Scott Toner',         text: 'kept his daily fire going — 12 days advancing at least one claim.',    ago: '1h ago' },
   { kind: 'close',  who: 'Asad Shahid',         text: 'closed an Op in 1.8 days — fastest of the month.',                    ago: '2h ago' },
   { kind: 'badge',  who: 'Lucas Rothwell',      text: 'earned 💎 Diamond Hands for 12 Ops in March.',                        ago: '3h ago' },
   { kind: 'champ',  who: 'Antonio De Grazia',   text: 'is the current Arena Champion (Q1).',                                  ago: '5h ago' },

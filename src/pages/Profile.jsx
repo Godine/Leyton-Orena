@@ -8,6 +8,7 @@ import PerformanceRings from '../components/profile/PerformanceRings.jsx'
 import TrendChart from '../components/profile/TrendChart.jsx'
 import BadgeShowcase from '../components/profile/BadgeShowcase.jsx'
 import StreakDisplay from '../components/profile/StreakDisplay.jsx'
+import FireStreak from '../components/shared/FireStreak.jsx'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 
 const JOIN_DATES = {
@@ -119,6 +120,12 @@ export default function Profile() {
           <RankSummary rank={rank} total={total} delta={deltaPositions} role={consultant.role} />
         </div>
         <div className="space-y-4">
+          <FireStreak
+            current={consultant.fire?.current ?? 0}
+            best={consultant.fire?.best ?? 0}
+            log={consultant.fire?.log ?? []}
+            variant="mini"
+          />
           <StreakDisplay
             current={consultant.streaks?.currentMonthlyStreak ?? 0}
             best={consultant.streaks?.bestMonthlyStreak ?? 0}

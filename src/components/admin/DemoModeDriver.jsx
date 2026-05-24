@@ -11,6 +11,7 @@ const SAMPLE_NOTIFS = [
   { kind: 'record',    title: 'Demo · 88% of the all-time record', body: 'One more big invoice and you take it.' },
   { kind: 'challenge', title: 'Demo · Ops Blitz 80%',             body: 'Team is one Op away from clinching it.' },
   { kind: 'streak',    title: 'Demo · Streak extended to 6 months', body: 'New personal best within reach.' },
+  { kind: 'streak',    title: 'Demo · Daily fire +1',                body: 'Another claim advanced today — fire keeps building.' },
 ]
 
 export default function DemoModeDriver() {

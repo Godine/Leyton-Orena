@@ -9,6 +9,7 @@ import { buildLeaderboard } from '../utils/computeRankings.js'
 import { computeRecords, isUnderThreat } from '../utils/computeRecords.js'
 import WelcomeHeader from '../components/home/WelcomeHeader.jsx'
 import QuickStats from '../components/home/QuickStats.jsx'
+import FireStreak from '../components/shared/FireStreak.jsx'
 import ChallengesPanel from '../components/home/ChallengesPanel.jsx'
 import ActivityFeed from '../components/home/ActivityFeed.jsx'
 import LocationPill from '../components/shared/LocationPill.jsx'
@@ -101,6 +102,13 @@ export default function Home() {
   return (
     <div className="space-y-8 xl:space-y-10">
       <WelcomeHeader name={currentUser.name} />
+
+      <FireStreak
+        current={currentUser.fire?.current ?? 0}
+        best={currentUser.fire?.best ?? 0}
+        log={currentUser.fire?.log ?? []}
+        variant="hero"
+      />
 
       <QuickStats stats={quickStats} />
 
