@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Users, User, Check, Clock } from 'lucide-react'
 
 const TYPE_META = {
@@ -60,16 +60,27 @@ export default function ChallengesPanel({ challenges, computed, badgesById }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-display font-black text-arena-ink leading-tight truncate">
+                    <h3 className="font-display font-black text-arena-ink leading-tight truncate flex-1 min-w-0">
                       {challenge.title}
                     </h3>
-                    <span
-                      className="arena-chip text-[9px]"
-                      style={{ background: `${meta.accent}22`, color: meta.accent, boxShadow: `inset 0 0 0 1px ${meta.accent}55` }}
-                    >
-                      <meta.Icon size={10} strokeWidth={3} />
-                      {meta.label}
-                    </span>
+                    {progress.completed ? (
+                      <motion.span
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                        className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-green text-arena-bg text-[10px] font-display font-black"
+                      >
+                        <Check size={11} strokeWidth={3.5} /> Complete
+                      </motion.span>
+                    ) : (
+                      <span
+                        className="arena-chip text-[9px] shrink-0"
+                        style={{ background: `${meta.accent}22`, color: meta.accent, boxShadow: `inset 0 0 0 1px ${meta.accent}55` }}
+                      >
+                        <meta.Icon size={10} strokeWidth={3} />
+                        {meta.label}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-arena-muted mt-1">{challenge.description}</p>
                 </div>
@@ -101,32 +112,20 @@ export default function ChallengesPanel({ challenges, computed, badgesById }) {
                 </span>
               </div>
 
-              <AnimatePresence>
-                {progress.completed && (
-                  <>
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-                      className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-green text-arena-bg text-[10px] font-display font-black"
-                    >
-                      <Check size={12} strokeWidth={3.5} /> Complete!
-                    </motion.div>
-                    <div className="pointer-events-none absolute top-3 right-3">
-                      {CONFETTI.map((c, ci) => (
-                        <motion.span
-                          key={ci}
-                          initial={{ x: 0, y: 0, opacity: 0, rotate: 0 }}
-                          animate={{ x: c.x, y: 40, opacity: [0, 1, 0], rotate: c.rot * 2 }}
-                          transition={{ duration: 1.1, ease: 'easeOut' }}
-                          className="absolute h-1.5 w-2.5 rounded-sm"
-                          style={{ background: c.color }}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </AnimatePresence>
+              {progress.completed && (
+                <div className="pointer-events-none absolute top-3 right-3">
+                  {CONFETTI.map((c, ci) => (
+                    <motion.span
+                      key={ci}
+                      initial={{ x: 0, y: 0, opacity: 0, rotate: 0 }}
+                      animate={{ x: c.x, y: 40, opacity: [0, 1, 0], rotate: c.rot * 2 }}
+                      transition={{ duration: 1.1, ease: 'easeOut' }}
+                      className="absolute h-1.5 w-2.5 rounded-sm"
+                      style={{ background: c.color }}
+                    />
+                  ))}
+                </div>
+              )}
             </motion.div>
           )
         })}
