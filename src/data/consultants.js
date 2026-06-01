@@ -131,10 +131,27 @@ function deriveEarlyTierBadges(monthlyStats) {
 import { STAGES, clientsForConsultant } from './workflow.js'
 
 const FIRE_BY_PROFILE = {
-  strong:       { current: 11, best: 18, density: 80 },
-  improving:    { current: 7,  best: 9,  density: 65 },
-  steady:       { current: 4,  best: 8,  density: 72 },
-  inconsistent: { current: 1,  best: 5,  density: 45 },
+  strong:       { current: 3, best: 5, density: 55 },
+  improving:    { current: 2, best: 4, density: 45 },
+  steady:       { current: 2, best: 4, density: 50 },
+  inconsistent: { current: 0, best: 3, density: 30 },
+}
+
+// Only a handful of consultants have actually impressive fire streaks. Default
+// fire stays modest so the daily-fire badges remain hard to earn.
+const FIRE_OVERRIDES = {
+  0:  { current: 11, best: 14, density: 78 }, // Oumayma — current user, must look impressive
+  7:  { current: 18, best: 32, density: 88 }, // Antonio — dynasty, deep fire
+  11: { current: 7,  best: 9,  density: 70 }, // Israe
+  16: { current: 9,  best: 11, density: 72 }, // Scott
+  17: { current: 12, best: 16, density: 78 }, // Jennifer
+  4:  { current: 5,  best: 7,  density: 60 }, // Lucas — solid mid
+  9:  { current: 4,  best: 6,  density: 58 }, // Louie
+  23: { current: 4,  best: 8,  density: 60 }, // Charlie
+}
+
+function fireConfigFor(profile, idx) {
+  return FIRE_OVERRIDES[idx] ?? (FIRE_BY_PROFILE[profile] ?? FIRE_BY_PROFILE.steady)
 }
 
 const FIRE_LOG_LEN = 30
@@ -142,7 +159,7 @@ const FIRE_LOG_LEN = 30
 function isoDate(d) { return d.toISOString().slice(0, 10) }
 
 function buildFireData(profile, idx) {
-  const cfg = FIRE_BY_PROFILE[profile] ?? FIRE_BY_PROFILE.steady
+  const cfg = fireConfigFor(profile, idx)
   const log = new Array(FIRE_LOG_LEN).fill(0)
   // last `current` days fire
   for (let i = 0; i < cfg.current && i < FIRE_LOG_LEN; i++) {
@@ -224,28 +241,78 @@ function deriveStreakTierBadges(streaks) {
   return { earned, earnedAt }
 }
 
-// ── Per-profile lifetime stats used by category ladders we don't yet track
-// elsewhere (Trustpilot reviews, contract speed, championship runs, earliest
-// invoice day in any month). Hand-tuned so each profile has a believable spread.
-const LIFETIME_BY_PROFILE = {
-  strong:       { trustpilot: 5, contractDays: 12, champBest: 2, champTotal: 3, earliestDay: 3, firstOfMonthCount: 2 },
-  improving:    { trustpilot: 2, contractDays: 35, champBest: 0, champTotal: 0, earliestDay: 7, firstOfMonthCount: 0 },
-  steady:       { trustpilot: 3, contractDays: 22, champBest: 1, champTotal: 1, earliestDay: 4, firstOfMonthCount: 1 },
-  inconsistent: { trustpilot: 1, contractDays: 75, champBest: 0, champTotal: 0, earliestDay: 12, firstOfMonthCount: 0 },
+// Lifetime ladders (Trustpilot reviews, fastest new-contract → invoice,
+// championship runs, earliest day, first-of-month count) are gated by
+// hand-assigned data so only a few stars earn the Client Voice, Speed to
+// Cash, Championship, Trailblazer and Early Bird badges. Everyone else
+// starts empty.
+const EMPTY_LIFETIME = {
+  trustpilot: 0,
+  contractDays: 999,
+  champBest: 0,
+  champTotal: 0,
+  earliestDay: 99,
+  firstOfMonthCount: 0,
 }
 
-// Antonio De Grazia (idx 7) is the reigning Arena Champion — bump his run so
-// the Dynasty mythic badge has a holder.
-const LIFETIME_OVERRIDES = {
-  7:  { trustpilot: 6, contractDays: 9,  champBest: 4, champTotal: 4, earliestDay: 2, firstOfMonthCount: 4 },
-  16: { trustpilot: 4, contractDays: 18, champBest: 2, champTotal: 2, earliestDay: 3, firstOfMonthCount: 1 }, // Scott Toner
-  17: { trustpilot: 5, contractDays: 14, champBest: 1, champTotal: 2, earliestDay: 3, firstOfMonthCount: 2 }, // Jennifer Woo
-  11: { trustpilot: 4, contractDays: 16, champBest: 1, champTotal: 1, earliestDay: 4, firstOfMonthCount: 1 }, // Israe Rouri
+const STAR_LIFETIME = {
+  0:  { trustpilot: 5, contractDays: 8,  champBest: 1, champTotal: 2, earliestDay: 3, firstOfMonthCount: 2 }, // Oumayma
+  7:  { trustpilot: 6, contractDays: 6,  champBest: 4, champTotal: 4, earliestDay: 2, firstOfMonthCount: 5 }, // Antonio – Dynasty
+  11: { trustpilot: 3, contractDays: 28, champBest: 1, champTotal: 1, earliestDay: 4, firstOfMonthCount: 1 }, // Israe
+  16: { trustpilot: 2, contractDays: 18, champBest: 2, champTotal: 2, earliestDay: 3, firstOfMonthCount: 1 }, // Scott – Back-to-Back
+  17: { trustpilot: 4, contractDays: 14, champBest: 1, champTotal: 2, earliestDay: 3, firstOfMonthCount: 2 }, // Jennifer
+  // A couple of solid mids get a sliver of lifetime so they're not bare:
+  4:  { trustpilot: 1, contractDays: 60, champBest: 0, champTotal: 0, earliestDay: 5, firstOfMonthCount: 0 }, // Lucas
+  9:  { trustpilot: 1, contractDays: 75, champBest: 0, champTotal: 0, earliestDay: 6, firstOfMonthCount: 0 }, // Louie
 }
 
-function lifetimeFor(profile, idx) {
-  const base = LIFETIME_BY_PROFILE[profile] ?? LIFETIME_BY_PROFILE.steady
-  return { ...base, ...(LIFETIME_OVERRIDES[idx] ?? {}) }
+function lifetimeFor(_profile, idx) {
+  return STAR_LIFETIME[idx] ?? EMPTY_LIFETIME
+}
+
+// Per-consultant ladder rung caps for the data-driven categories. Anyone not
+// listed gets DEFAULT_CAPS (all zeros) — no derived badges at all. This is the
+// knob that controls how many badges each person ends up with.
+//   early   max tier of Early Invoicing ladder (out of 6)
+//   streak  max tier of Monthly Streak ladder (out of 5)
+//   rev     max tier of Big Revenue (out of 3)
+//   vol     max tier of Volume (out of 4)
+//   rel     max tier of Reliability (out of 6)
+//   fire    max tier of Daily Fire (out of 5)
+const DEFAULT_CAPS = { early: 0, streak: 0, rev: 0, vol: 0, rel: 0, fire: 0 }
+
+const BADGE_CAPS = {
+  // ── Stars (heavy, 10+ badges) ─────────────────────────────────────────────
+  0:  { early: 6, streak: 5, rev: 2, vol: 2, rel: 4, fire: 2 }, // Oumayma
+  7:  { early: 6, streak: 5, rev: 3, vol: 4, rel: 6, fire: 3 }, // Antonio
+  11: { early: 5, streak: 4, rev: 2, vol: 2, rel: 3, fire: 1 }, // Israe
+  16: { early: 5, streak: 4, rev: 2, vol: 2, rel: 3, fire: 1 }, // Scott
+  17: { early: 5, streak: 4, rev: 2, vol: 3, rel: 4, fire: 2 }, // Jennifer
+  // ── Solid mid (3-4 badges) ────────────────────────────────────────────────
+  4:  { early: 2, streak: 2, rev: 0, vol: 0, rel: 0, fire: 1 }, // Lucas
+  5:  { early: 2, streak: 1, rev: 0, vol: 0, rel: 1, fire: 0 }, // Mohammed
+  9:  { early: 2, streak: 2, rev: 0, vol: 0, rel: 1, fire: 0 }, // Louie
+  13: { early: 2, streak: 1, rev: 0, vol: 0, rel: 1, fire: 0 }, // Ibtissam
+  20: { early: 2, streak: 1, rev: 0, vol: 0, rel: 0, fire: 0 }, // Rebecca
+  23: { early: 2, streak: 2, rev: 0, vol: 0, rel: 0, fire: 1 }, // Charlie
+  // ── Light (1-2 badges) ────────────────────────────────────────────────────
+  1:  { early: 1, streak: 1, rev: 0, vol: 0, rel: 0, fire: 0 }, // David B
+  8:  { early: 1, streak: 1, rev: 0, vol: 0, rel: 0, fire: 0 }, // Asad
+  19: { early: 0, streak: 0, rev: 0, vol: 0, rel: 1, fire: 0 }, // Marco
+  21: { early: 1, streak: 0, rev: 0, vol: 0, rel: 0, fire: 0 }, // David Kerr
+  // others (2, 3, 6, 10, 12, 14, 15, 18, 22) → no derived badges
+}
+
+function capsFor(idx) { return BADGE_CAPS[idx] ?? DEFAULT_CAPS }
+
+function capLadder(ladder, cap) {
+  if (!ladder?.earned?.length) return { earned: [], earnedAt: {} }
+  const earned = ladder.earned.slice(0, cap)
+  const keep = new Set(earned)
+  const earnedAt = Object.fromEntries(
+    Object.entries(ladder.earnedAt ?? {}).filter(([k]) => keep.has(k)),
+  )
+  return { earned, earnedAt }
 }
 
 // Longest run of consecutive months with zero pushed Ops.
@@ -349,21 +416,25 @@ export const CONSULTANTS = SEED.map((c, idx) => {
   const fire = buildFireData(c.profile, idx)
   const lifetime = lifetimeFor(c.profile, idx)
   const latest = MONTHS.at(-1)
+  const cap = capsFor(idx)
 
-  // Each ladder is fully data-driven from monthly stats or lifetime counters.
+  // Data-driven ladders, then capped per consultant so badge distribution is
+  // controlled. Lifetime ladders aren't capped — they self-gate because
+  // non-star consultants have empty lifetime data and never clear thresholds.
   const ladders = [
-    deriveEarlyTierBadges(monthlyStats),                                          // 40 → 90 %
-    deriveStreakTierBadges(c.streak),                                             // monthly streaks
-    deriveMonthlyLadder(REVENUE_TIERS, monthlyStats, 'invoiceValue'),             // 100/150/200k
-    deriveMonthlyLadder(VOLUME_TIERS,  monthlyStats, 'opsDelivered'),             // 15/20/25/30
-    deriveLadder(RELIABILITY_TIERS, longestNoPushRun(monthlyStats), latest),      // 1..6 mo
-    deriveLadder(FIRE_BADGE_TIERS,  fire.best, latest),                           // 7..60 days
-    deriveLadder(REVIEW_TIERS, lifetime.trustpilot, latest),                      // 1..6 reviews
-    deriveLadder(SPEED_TIERS,  lifetime.contractDays, latest, true),              // ≤90..7 days
-    deriveLadder(CHAMP_TIERS,  lifetime.champBest, latest),                       // 1..4 quarters
+    capLadder(deriveEarlyTierBadges(monthlyStats),                                     cap.early),
+    capLadder(deriveStreakTierBadges(c.streak),                                        cap.streak),
+    capLadder(deriveMonthlyLadder(REVENUE_TIERS, monthlyStats, 'invoiceValue'),        cap.rev),
+    capLadder(deriveMonthlyLadder(VOLUME_TIERS,  monthlyStats, 'opsDelivered'),        cap.vol),
+    capLadder(deriveLadder(RELIABILITY_TIERS, longestNoPushRun(monthlyStats), latest), cap.rel),
+    capLadder(deriveLadder(FIRE_BADGE_TIERS,  fire.best, latest),                      cap.fire),
+    deriveLadder(REVIEW_TIERS, lifetime.trustpilot, latest),                           // 1..6 reviews
+    deriveLadder(SPEED_TIERS,  lifetime.contractDays, latest, true),                   // ≤90..7 days
+    deriveLadder(CHAMP_TIERS,  lifetime.champBest, latest),                            // 1..4 quarters
   ]
 
-  // Singletons: first-of-the-month and earliest-day badges.
+  // Singletons: first-of-the-month and day-5 — gated by lifetime data too,
+  // so only stars with non-empty lifetime can pick them up.
   const earned = ladders.flatMap((l) => l.earned)
   const earnedAt = Object.assign({}, ...ladders.map((l) => l.earnedAt))
   if (lifetime.firstOfMonthCount >= 1) {
