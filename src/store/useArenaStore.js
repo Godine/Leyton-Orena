@@ -33,12 +33,51 @@ export const useArenaStore = create((set, get) => ({
       ),
     })),
 
+  // mutate a consultant's monthly targets (used by Admin targets editor)
+  setConsultantTargets: (consultantId, patch) =>
+    set((state) => ({
+      consultants: state.consultants.map((c) =>
+        c.id !== consultantId ? c : { ...c, targets: { ...c.targets, ...patch } },
+      ),
+    })),
+
   // demo / presentation mode
   demoMode: false,
   setDemoMode: (v) => set({ demoMode: v }),
 
   walkthroughOpen: false,
   setWalkthroughOpen: (v) => set({ walkthroughOpen: v }),
+
+  // Teams webhook integration — purely client-side for MVP. When enabled we
+  // POST a minimal payload to the configured URL; CORS-friendly mode is used
+  // so the request goes out even from the browser.
+  teamsWebhook: { url: '', enabled: false, lastSentAt: null },
+  setTeamsWebhook: (patch) =>
+    set((state) => ({ teamsWebhook: { ...state.teamsWebhook, ...patch } })),
+  broadcastToTeams: async (event) => {
+    const wh = get().teamsWebhook
+    if (!wh.enabled || !wh.url) return { ok: false, reason: 'not-configured' }
+    const payload = {
+      '@type': 'MessageCard',
+      '@context': 'https://schema.org/extensions',
+      themeColor: 'F75C03',
+      summary: event.title ?? 'Leyton Arena',
+      title: event.title ?? 'Leyton Arena',
+      text: event.body ?? '',
+    }
+    try {
+      await fetch(wh.url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      set({ teamsWebhook: { ...wh, lastSentAt: Date.now() } })
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, reason: err?.message ?? 'fetch-failed' }
+    }
+  },
 
   // unlock animations seen this session (keyed by `${userId}:${badgeId}`)
   seenUnlocks: {},

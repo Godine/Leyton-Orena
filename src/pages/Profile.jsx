@@ -8,6 +8,7 @@ import PerformanceRings from '../components/profile/PerformanceRings.jsx'
 import TrendChart from '../components/profile/TrendChart.jsx'
 import BadgeShowcase from '../components/profile/BadgeShowcase.jsx'
 import StreakDisplay from '../components/profile/StreakDisplay.jsx'
+import PersonalRecords from '../components/profile/PersonalRecords.jsx'
 import FireStreak from '../components/shared/FireStreak.jsx'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 
@@ -112,7 +113,7 @@ export default function Profile() {
 
       <section>
         <h2 className="font-display font-black text-arena-ink text-lg mb-3">This month</h2>
-        <PerformanceRings currentMonth={currentStats} teamAverages={teamAverages} />
+        <PerformanceRings currentMonth={currentStats} teamAverages={teamAverages} targets={consultant.targets} />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-6">
@@ -133,6 +134,7 @@ export default function Profile() {
             current={consultant.streaks?.currentMonthlyStreak ?? 0}
             best={consultant.streaks?.bestMonthlyStreak ?? 0}
           />
+          <PersonalRecords consultant={consultant} />
           <BadgeShowcase
             earnedBadges={earnedBadgeObjs}
             nextBadge={nextBadge}

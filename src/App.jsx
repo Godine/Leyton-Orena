@@ -13,6 +13,8 @@ const Achievements = lazy(() => import('./pages/Achievements.jsx'))
 const Records      = lazy(() => import('./pages/Records.jsx'))
 const Profile      = lazy(() => import('./pages/Profile.jsx'))
 const Manager      = lazy(() => import('./pages/Manager.jsx'))
+const Rewards      = lazy(() => import('./pages/Rewards.jsx'))
+const Wrapped      = lazy(() => import('./pages/Wrapped.jsx'))
 const Admin        = lazy(() => import('./pages/Admin.jsx'))
 
 export default function App() {
@@ -36,6 +38,8 @@ export default function App() {
                 <Route path="/records"      element={<Records />} />
                 <Route path="/profile"      element={<Profile />} />
                 <Route path="/manager"      element={<Manager />} />
+                <Route path="/rewards"      element={<Rewards />} />
+                <Route path="/wrapped"      element={<Wrapped />} />
                 <Route path="/admin"        element={<Admin />} />
               </Routes>
             </Suspense>

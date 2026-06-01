@@ -2,8 +2,9 @@ import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS } from './navConfig.js'
 
 // Profile + Admin live in the TopBar (next to the bell), so the bottom bar
-// stays lean with the primary browsing destinations only.
-const BOTTOM_EXCLUDE = new Set(['/profile', '/admin'])
+// stays lean with the primary browsing destinations only. Rewards and Wrapped
+// are also kept off the bottom bar for now to avoid crowding.
+const BOTTOM_EXCLUDE = new Set(['/profile', '/admin', '/rewards', '/wrapped'])
 
 export default function BottomTabs() {
   const items = NAV_ITEMS.filter((item) => !BOTTOM_EXCLUDE.has(item.to))

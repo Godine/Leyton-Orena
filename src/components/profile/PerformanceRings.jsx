@@ -1,15 +1,23 @@
 import ProgressRing, { pickRingColor } from '../shared/ProgressRing.jsx'
 import { formatCurrencyCompact } from '../../utils/formatters.js'
 
-const TARGETS = {
+const DEFAULT_TARGETS = {
   opsDelivered: 7,
   invoiceValue: 55000,
   invoiceBeforeDay15Pct: 70,
   avgDaysToClose: 4, // lower is better
 }
 
-function ringFor(metric, current, comparison) {
-  const target = TARGETS[metric]
+const TARGET_KEY = {
+  opsDelivered: 'ops',
+  invoiceValue: 'invoice',
+  invoiceBeforeDay15Pct: 'earlyPct',
+  avgDaysToClose: 'daysClose',
+}
+
+function ringFor(metric, current, comparison, perConsultant) {
+  const customKey = TARGET_KEY[metric]
+  const target = perConsultant?.[customKey] ?? DEFAULT_TARGETS[metric]
   let ratio = 0
   let comparisonLabel = ''
   if (metric === 'avgDaysToClose') {
@@ -35,13 +43,13 @@ const CARDS = [
   { key: 'avgDaysToClose',        label: 'Avg Days to Close', format: (v) => `${v.toFixed(1)}d` },
 ]
 
-export default function PerformanceRings({ currentMonth, teamAverages }) {
+export default function PerformanceRings({ currentMonth, teamAverages, targets }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {CARDS.map((card) => {
         const value = currentMonth?.[card.key] ?? 0
         const compare = teamAverages?.[card.key] ?? 0
-        const { ratio, color, comparisonLabel } = ringFor(card.key, value, compare)
+        const { ratio, color, comparisonLabel } = ringFor(card.key, value, compare, targets)
         return (
           <div key={card.key} className="arena-card p-3 sm:p-4 flex flex-col items-center text-center min-w-0">
             <ProgressRing

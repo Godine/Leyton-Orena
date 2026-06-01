@@ -11,10 +11,11 @@ import WelcomeHeader from '../components/home/WelcomeHeader.jsx'
 import QuickStats from '../components/home/QuickStats.jsx'
 import FireStreak from '../components/shared/FireStreak.jsx'
 import ChallengesPanel from '../components/home/ChallengesPanel.jsx'
+import DuelsPanel from '../components/home/DuelsPanel.jsx'
 import ActivityFeed from '../components/home/ActivityFeed.jsx'
 import LocationPill from '../components/shared/LocationPill.jsx'
 
-const TARGETS = { ops: 7, invoice: 55000 }
+const DEFAULT_TARGETS = { ops: 7, invoice: 55000 }
 
 export default function Home() {
   const consultants = useArenaStore((s) => s.consultants)
@@ -53,9 +54,11 @@ export default function Home() {
     }
   }, [consultants, months, sortedMonths, currentUser])
 
+  const opsTarget = currentUser.targets?.ops ?? DEFAULT_TARGETS.ops
+  const invoiceTarget = currentUser.targets?.invoice ?? DEFAULT_TARGETS.invoice
   const quickStats = {
-    ops:     { value: stats?.opsDelivered ?? 0, target: TARGETS.ops,     ratio: (stats?.opsDelivered ?? 0) / TARGETS.ops },
-    invoice: { value: stats?.invoiceValue ?? 0, target: TARGETS.invoice, ratio: (stats?.invoiceValue ?? 0) / TARGETS.invoice },
+    ops:     { value: stats?.opsDelivered ?? 0, target: opsTarget,     ratio: (stats?.opsDelivered ?? 0) / opsTarget },
+    invoice: { value: stats?.invoiceValue ?? 0, target: invoiceTarget, ratio: (stats?.invoiceValue ?? 0) / invoiceTarget },
     rank: rankInfo.rank, rankTotal: rankInfo.total, rankDelta: rankInfo.delta,
     streak: currentUser.streaks?.currentMonthlyStreak ?? 0,
     bestStreak: currentUser.streaks?.bestMonthlyStreak ?? 0,
@@ -119,6 +122,8 @@ export default function Home() {
         computed={computedChallenges}
         badgesById={badgesById}
       />
+
+      <DuelsPanel />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-6">
         <div className="lg:col-span-2 xl:col-span-3">

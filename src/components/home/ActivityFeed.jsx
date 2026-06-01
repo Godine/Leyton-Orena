@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Award, Trophy, TrendingUp, Flame, Medal, Zap } from 'lucide-react'
+import { Award, Trophy, TrendingUp, Flame, Medal, Zap, MessageSquare, Check } from 'lucide-react'
+import { useArenaStore } from '../../store/useArenaStore.js'
 
 // Mock events — hand-authored to read like real arena activity.
 const EVENT_KINDS = {
@@ -28,6 +30,16 @@ const EVENTS = [
 ]
 
 export default function ActivityFeed() {
+  const webhookEnabled = useArenaStore((s) => s.teamsWebhook.enabled && Boolean(s.teamsWebhook.url))
+  const broadcast = useArenaStore((s) => s.broadcastToTeams)
+  const [sentIdx, setSentIdx] = useState(null)
+
+  const handleBroadcast = async (e, idx) => {
+    setSentIdx(idx)
+    await broadcast({ title: `${e.who} · Arena`, body: e.text })
+    setTimeout(() => setSentIdx((x) => (x === idx ? null : x)), 1800)
+  }
+
   return (
     <section>
       <header className="flex items-center justify-between mb-3 px-1">
@@ -43,7 +55,7 @@ export default function ActivityFeed() {
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.04 * i, type: 'spring', stiffness: 240, damping: 22 }}
-              className="flex items-start gap-3 px-4 py-3 hover:bg-arena-surface2/40"
+              className="group flex items-start gap-3 px-4 py-3 hover:bg-arena-surface2/40"
             >
               <span
                 className="h-9 w-9 rounded-xl grid place-items-center shrink-0 mt-0.5"
@@ -58,6 +70,19 @@ export default function ActivityFeed() {
                 </p>
                 <p className="text-[10px] uppercase tracking-wider text-arena-muted mt-1">{e.ago}</p>
               </div>
+              {webhookEnabled && (
+                <button
+                  onClick={() => handleBroadcast(e, i)}
+                  title="Broadcast to Teams"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent-blue/15 text-accent-blue text-[10px] font-display font-bold ring-1 ring-inset ring-accent-blue/40"
+                >
+                  {sentIdx === i ? (
+                    <><Check size={11} strokeWidth={3} /> Sent</>
+                  ) : (
+                    <><MessageSquare size={11} strokeWidth={2.6} /> Teams</>
+                  )}
+                </button>
+              )}
             </motion.li>
           )
         })}

@@ -458,6 +458,14 @@ export const CONSULTANTS = SEED.map((c, idx) => {
     role: c.role,
     seniority: c.seniority ?? null,
     location: c.location,
+    // Per-consultant monthly targets. Defaults match the old global ones; the
+    // Admin page lets managers override on a per-person basis.
+    targets: {
+      ops: c.targets?.ops ?? 7,
+      invoice: c.targets?.invoice ?? 55000,
+      earlyPct: c.targets?.earlyPct ?? 70,
+      daysClose: c.targets?.daysClose ?? 4,
+    },
     badges,
     badgeEarnedAt: buildBadgeEarnedAt(badges, idx, earnedAt),
     streaks: c.streak,

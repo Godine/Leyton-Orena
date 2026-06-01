@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Settings, RotateCcw, Sparkles, PlayCircle, Compass } from 'lucide-react'
+import { Settings, RotateCcw, Sparkles, PlayCircle, Compass, MessageSquare, Target } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { useNotificationStore } from '../store/useNotificationStore.js'
 import { useChallengeStore } from '../store/useChallengeStore.js'
+import { formatCurrencyCompact } from '../utils/formatters.js'
 
 export default function Admin() {
   const consultants = useArenaStore((s) => s.consultants)
@@ -17,6 +18,11 @@ export default function Admin() {
 
   const challenges = useChallengeStore((s) => s.challenges)
   const updateChallenge = useChallengeStore((s) => s.updateChallenge)
+
+  const teamsWebhook = useArenaStore((s) => s.teamsWebhook)
+  const setTeamsWebhook = useArenaStore((s) => s.setTeamsWebhook)
+  const broadcastToTeams = useArenaStore((s) => s.broadcastToTeams)
+  const setConsultantTargets = useArenaStore((s) => s.setConsultantTargets)
 
   const latestMonth = useMemo(() => [...months].sort().at(-1), [months])
   const [editMonth, setEditMonth] = useState(latestMonth)
@@ -115,6 +121,155 @@ export default function Admin() {
         </header>
         <ChallengeEditor challenges={challenges} updateChallenge={updateChallenge} />
       </section>
+
+      <section>
+        <header className="flex items-center gap-3 mb-3">
+          <h2 className="font-display font-black text-arena-ink text-lg flex items-center gap-2">
+            <Target size={18} className="text-accent-green" />
+            Per-consultant targets
+          </h2>
+          <span className="h-px flex-1 bg-arena-border" />
+          <span className="text-xs text-arena-muted">Powers the Profile rings</span>
+        </header>
+        <TargetsTable consultants={consultants} onEdit={(id, patch) => setConsultantTargets(id, patch)} />
+      </section>
+
+      <section>
+        <header className="flex items-center gap-3 mb-3">
+          <h2 className="font-display font-black text-arena-ink text-lg flex items-center gap-2">
+            <MessageSquare size={18} className="text-accent-blue" />
+            Teams broadcast
+          </h2>
+          <span className="h-px flex-1 bg-arena-border" />
+          <span className="text-xs text-arena-muted">
+            {teamsWebhook.enabled ? 'Enabled' : 'Disabled'}
+          </span>
+        </header>
+        <TeamsConfig
+          webhook={teamsWebhook}
+          onChange={setTeamsWebhook}
+          onTest={() =>
+            broadcastToTeams({
+              title: 'Leyton Arena · test broadcast',
+              body: 'If you see this in your channel, the webhook is wired up correctly.',
+            })
+          }
+        />
+      </section>
+    </div>
+  )
+}
+
+function TargetsTable({ consultants, onEdit }) {
+  return (
+    <div className="arena-card p-0 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold bg-arena-surface2/40 border-b border-arena-border">
+              <th className="text-left px-4 py-3 sticky left-0 bg-arena-surface2/80 backdrop-blur">Consultant</th>
+              <th className="text-right px-3 py-3">Ops</th>
+              <th className="text-right px-3 py-3">Invoice £</th>
+              <th className="text-right px-3 py-3">Early %</th>
+              <th className="text-right px-3 py-3">Days close</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-arena-border">
+            {consultants.map((c) => (
+              <tr key={c.id} className="hover:bg-arena-surface2/40">
+                <td className="px-4 py-2 sticky left-0 bg-arena-surface/95 backdrop-blur">
+                  <div className="font-display font-bold text-arena-ink leading-tight">{c.name}</div>
+                  <div className="text-[11px] text-arena-muted">
+                    {c.role} · target invoice: {formatCurrencyCompact(c.targets?.invoice ?? 0)}
+                  </div>
+                </td>
+                <TargetCell value={c.targets?.ops ?? 0}       step={1}    onChange={(v) => onEdit(c.id, { ops: v })} />
+                <TargetCell value={c.targets?.invoice ?? 0}   step={1000} onChange={(v) => onEdit(c.id, { invoice: v })} />
+                <TargetCell value={c.targets?.earlyPct ?? 0}  step={1} max={100} onChange={(v) => onEdit(c.id, { earlyPct: v })} />
+                <TargetCell value={c.targets?.daysClose ?? 0} step={0.1}  onChange={(v) => onEdit(c.id, { daysClose: v })} />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function TargetCell({ value, step, max, onChange }) {
+  return (
+    <td className="px-2 py-2 text-right">
+      <input
+        type="number"
+        step={step}
+        min={0}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-24 bg-arena-bg/60 border border-arena-border rounded-lg px-2 py-1 text-right text-arena-ink text-xs font-mono focus:outline-none focus:ring-2 focus:ring-accent-green/50"
+      />
+    </td>
+  )
+}
+
+function TeamsConfig({ webhook, onChange, onTest }) {
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState(null)
+  const handleTest = async () => {
+    setBusy(true)
+    const res = await onTest()
+    setResult(res?.ok ? 'ok' : (res?.reason ?? 'failed'))
+    setBusy(false)
+    setTimeout(() => setResult(null), 2500)
+  }
+  return (
+    <div className="arena-card p-5 flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+        <label className="block">
+          <span className="block text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold mb-1">
+            Incoming webhook URL
+          </span>
+          <input
+            type="url"
+            value={webhook.url}
+            placeholder="https://your-tenant.webhook.office.com/..."
+            onChange={(e) => onChange({ url: e.target.value })}
+            className="w-full bg-arena-bg/60 border border-arena-border rounded-xl px-3 py-2 text-sm text-arena-ink font-mono focus:outline-none focus:ring-2 focus:ring-accent-blue/50"
+          />
+        </label>
+        <button
+          onClick={() => onChange({ enabled: !webhook.enabled })}
+          className={[
+            'inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-display font-bold',
+            webhook.enabled
+              ? 'bg-accent-green text-arena-bg shadow-glow'
+              : 'bg-arena-surface2 text-arena-muted border border-arena-border',
+          ].join(' ')}
+        >
+          {webhook.enabled ? 'Broadcasting' : 'Disabled'}
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-xs text-arena-muted max-w-md">
+          Paste a Microsoft Teams "Incoming Webhook" URL. Activity feed events
+          and the test button below post a MessageCard payload to that channel.
+          Requests use <code className="font-mono text-arena-ink">no-cors</code> mode so they ship from the browser.
+        </p>
+        <button
+          onClick={handleTest}
+          disabled={busy || !webhook.url}
+          className="px-4 py-2 rounded-full bg-accent-blue/15 text-accent-blue text-xs font-display font-bold ring-1 ring-inset ring-accent-blue/40 disabled:opacity-50"
+        >
+          {busy ? 'Sending…' : result === 'ok' ? 'Sent ✓' : result ? `Failed (${result})` : 'Send test event'}
+        </button>
+      </div>
+
+      {webhook.lastSentAt && (
+        <div className="text-[11px] text-arena-muted">
+          Last broadcast {new Date(webhook.lastSentAt).toLocaleString('en-GB')}
+        </div>
+      )}
     </div>
   )
 }
