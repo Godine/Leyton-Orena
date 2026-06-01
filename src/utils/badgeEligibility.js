@@ -1,110 +1,98 @@
-// Heuristic progress (0..1) toward each badge for a single consultant.
-// Used on the locked-badge state in the detail modal and to pick the
-// "closest to unlock" badge in the Progress summary.
-//
-// Where a badge depends on info we don't track yet (e.g. true tax-year
-// boundaries, weekly slices), we either approximate with the closest
-// monthly proxy or return `null` to mean "progress unknowable from data."
+// Progress helpers for badges. Used by the locked-badge state in the detail
+// modal and to pick the "closest to unlock" badge.
 
 function bestMonth(stats, key, betterWhenLower = false) {
-  if (!stats.length) return 0
+  if (!stats.length) return betterWhenLower ? Infinity : 0
   const vals = stats.map((s) => s[key] ?? 0)
   return betterWhenLower ? Math.min(...vals) : Math.max(...vals)
 }
 
-function consecutiveImproving(stats, key) {
+function longestNoPushRun(stats) {
   let best = 0, run = 0
-  for (let i = 1; i < stats.length; i++) {
-    if ((stats[i][key] ?? 0) > (stats[i - 1][key] ?? 0)) {
-      run += 1
-      best = Math.max(best, run)
-    } else {
-      run = 0
-    }
-  }
-  // 3 strictly-increasing months in a row = a 3-improvement run starting from idx 1.
-  return best
-}
-
-function bestQuarterSum(stats, key) {
-  if (stats.length < 3) return stats.reduce((a, b) => a + (b[key] ?? 0), 0)
-  let best = 0
-  for (let i = 0; i <= stats.length - 3; i++) {
-    const sum = (stats[i][key] ?? 0) + (stats[i + 1][key] ?? 0) + (stats[i + 2][key] ?? 0)
-    best = Math.max(best, sum)
+  const sorted = [...stats].sort((a, b) => a.month.localeCompare(b.month))
+  for (const m of sorted) {
+    if ((m.pushedOps ?? 0) === 0) { run += 1; best = Math.max(best, run) }
+    else { run = 0 }
   }
   return best
 }
 
-// Mapping for the early-invoice progression ladder.
-const EARLY_TIER_TARGETS = {
-  pacemaker:    50,
-  'front-runner': 60,
-  'cash-closer':  70,
-  'front-loader': 80,
-  untouchable:  90,
+// Tier tables ------------------------------------------------------------
+const EARLY_TARGETS = {
+  'early-40': 40, pacemaker: 50, 'front-runner': 60,
+  'cash-closer': 70, 'front-loader': 80, untouchable: 90,
 }
+const STREAK_TARGETS = {
+  kindling: 2, 'on-fire': 3, heatwave: 4, inferno: 5, supernova: 6,
+}
+const REVENUE_TARGETS = { 'rev-100k': 100000, 'rev-150k': 150000, 'rev-200k': 200000 }
+const VOLUME_TARGETS  = { 'vol-15': 15, 'vol-20': 20, 'vol-25': 25, 'vol-30': 30 }
+const RELIABILITY_TARGETS = {
+  'noPush-1': 1, 'noPush-2': 2, 'noPush-3': 3, 'noPush-4': 4, 'noPush-5': 5, 'noPush-6': 6,
+}
+const FIRE_TARGETS = { 'fire-7': 7, 'fire-15': 15, 'fire-30': 30, 'fire-45': 45, 'fire-60': 60 }
+const REVIEW_TARGETS = {
+  'reviews-1': 1, 'reviews-2': 2, 'reviews-3': 3, 'reviews-4': 4, 'reviews-5': 5, 'reviews-6': 6,
+}
+const SPEED_TARGETS = {
+  'speed-90': 90, 'speed-60': 60, 'speed-30': 30, 'speed-15': 15, 'speed-7': 7,
+}
+const CHAMP_TARGETS = { 'champ-1q': 1, 'champ-2q': 2, 'champ-3q': 3, 'champ-year': 4 }
 
-// Mapping for the consecutive-target-hit ladder (in months of best streak).
-const STREAK_TIER_TARGETS = {
-  kindling:  2,
-  'on-fire': 3,
-  heatwave:  4,
-  inferno:   5,
-  supernova: 6,
+function ladder(value, target, unit, betterWhenLower = false) {
+  const ratio = betterWhenLower
+    ? (value === 0 ? 1 : Math.min(1, target / Math.max(value, 1e-9)))
+    : Math.min(1, value / target)
+  return { value, target, ratio, unit, betterWhenLower }
 }
 
 export function badgeProgress(consultant, badgeId) {
   const stats = consultant.monthlyStats ?? []
-  if (EARLY_TIER_TARGETS[badgeId] != null) {
-    const target = EARLY_TIER_TARGETS[badgeId]
-    const best = bestMonth(stats, 'invoiceBeforeDay15Pct')
-    return { value: best, target, ratio: Math.min(1, best / target), unit: '%' }
+  const fire = consultant.fire ?? { best: 0 }
+  const streaks = consultant.streaks ?? {}
+  const life = consultant.lifetime ?? {}
+
+  if (EARLY_TARGETS[badgeId] != null) {
+    return ladder(bestMonth(stats, 'invoiceBeforeDay15Pct'), EARLY_TARGETS[badgeId], '%')
   }
-  if (STREAK_TIER_TARGETS[badgeId] != null) {
-    const target = STREAK_TIER_TARGETS[badgeId]
-    // Progress reflects the *current* live streak so consultants can see how
-    // close they are to the next tier right now.
-    const current = consultant.streaks?.currentMonthlyStreak ?? 0
-    const best = consultant.streaks?.bestMonthlyStreak ?? 0
-    const value = Math.max(current, best)
-    return { value, target, ratio: Math.min(1, value / target), unit: 'mo streak' }
+  if (STREAK_TARGETS[badgeId] != null) {
+    const value = Math.max(streaks.currentMonthlyStreak ?? 0, streaks.bestMonthlyStreak ?? 0)
+    return ladder(value, STREAK_TARGETS[badgeId], 'mo streak')
   }
-  switch (badgeId) {
-    case 'diamond-hands': {
-      const v = bestMonth(stats, 'opsDelivered')
-      return { value: v, target: 10, ratio: Math.min(1, v / 10), unit: 'ops/mo' }
-    }
-    case 'client-whisperer': {
-      const v = bestQuarterSum(stats, 'clientRetentionFlags')
-      return { value: v, target: 5, ratio: Math.min(1, v / 5), unit: 'flags/qtr' }
-    }
-    case 'growth-engine': {
-      const runs = consecutiveImproving(stats, 'invoiceValue')
-      // need 3 strictly-increasing months (run length of 3 in our counter)
-      return { value: runs, target: 3, ratio: Math.min(1, runs / 3), unit: 'months' }
-    }
-    case 'sniper': {
-      const fastest = bestMonth(stats, 'avgDaysToClose', true)
-      // closer to 2 days is better; clamp
-      const ratio = fastest === 0 ? 0 : Math.min(1, 2 / fastest)
-      return { value: fastest, target: 2, ratio, unit: 'd avg close', betterWhenLower: true }
-    }
-    case 'iron-wall':
-    case 'early-bird':
-    case 'retention-shield':
-    case 'hat-trick':
-    case 'peak-month':
-    case 'lab-rat':
-    case 'ice-breaker':
-    case 'arena-champion':
-    default:
-      return null
+  if (REVENUE_TARGETS[badgeId] != null) {
+    return ladder(bestMonth(stats, 'invoiceValue'), REVENUE_TARGETS[badgeId], '£/mo')
   }
+  if (VOLUME_TARGETS[badgeId] != null) {
+    return ladder(bestMonth(stats, 'opsDelivered'), VOLUME_TARGETS[badgeId], 'ops/mo')
+  }
+  if (RELIABILITY_TARGETS[badgeId] != null) {
+    return ladder(longestNoPushRun(stats), RELIABILITY_TARGETS[badgeId], 'mo')
+  }
+  if (FIRE_TARGETS[badgeId] != null) {
+    return ladder(fire.best ?? 0, FIRE_TARGETS[badgeId], 'days')
+  }
+  if (REVIEW_TARGETS[badgeId] != null) {
+    return ladder(life.trustpilot ?? 0, REVIEW_TARGETS[badgeId], 'reviews')
+  }
+  if (SPEED_TARGETS[badgeId] != null) {
+    return ladder(life.contractDays ?? Infinity, SPEED_TARGETS[badgeId], 'd', true)
+  }
+  if (CHAMP_TARGETS[badgeId] != null) {
+    return ladder(life.champBest ?? 0, CHAMP_TARGETS[badgeId], 'qtrs')
+  }
+  // Singletons
+  if (badgeId === 'first-of-month') {
+    const v = life.firstOfMonthCount ?? 0
+    return { value: v, target: 1, ratio: Math.min(1, v), unit: 'months' }
+  }
+  if (badgeId === 'day-5') {
+    const v = life.earliestDay ?? 99
+    return ladder(v, 5, 'day', true)
+  }
+  return null
 }
 
 // Best locked badge for a consultant — the one they're closest to unlocking.
-// `allBadges` is the full registry (id + meta).
 export function closestToUnlock(consultant, allBadges) {
   const earned = new Set(consultant.badges)
   let best = null

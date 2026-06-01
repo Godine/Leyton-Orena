@@ -103,6 +103,7 @@ function buildBadgeEarnedAt(badges, idx, derivedAt = {}) {
 // Progressive early-invoice ladder: badge id + threshold for invoiceBeforeDay15Pct.
 // Each consultant unlocks every tier they cleared in any month.
 const EARLY_TIERS = [
+  { id: 'early-40',     threshold: 40 },
   { id: 'pacemaker',    threshold: 50 },
   { id: 'front-runner', threshold: 60 },
   { id: 'cash-closer',  threshold: 70 },
@@ -223,23 +224,170 @@ function deriveStreakTierBadges(streaks) {
   return { earned, earnedAt }
 }
 
+// ── Per-profile lifetime stats used by category ladders we don't yet track
+// elsewhere (Trustpilot reviews, contract speed, championship runs, earliest
+// invoice day in any month). Hand-tuned so each profile has a believable spread.
+const LIFETIME_BY_PROFILE = {
+  strong:       { trustpilot: 5, contractDays: 12, champBest: 2, champTotal: 3, earliestDay: 3, firstOfMonthCount: 2 },
+  improving:    { trustpilot: 2, contractDays: 35, champBest: 0, champTotal: 0, earliestDay: 7, firstOfMonthCount: 0 },
+  steady:       { trustpilot: 3, contractDays: 22, champBest: 1, champTotal: 1, earliestDay: 4, firstOfMonthCount: 1 },
+  inconsistent: { trustpilot: 1, contractDays: 75, champBest: 0, champTotal: 0, earliestDay: 12, firstOfMonthCount: 0 },
+}
+
+// Antonio De Grazia (idx 7) is the reigning Arena Champion — bump his run so
+// the Dynasty mythic badge has a holder.
+const LIFETIME_OVERRIDES = {
+  7:  { trustpilot: 6, contractDays: 9,  champBest: 4, champTotal: 4, earliestDay: 2, firstOfMonthCount: 4 },
+  16: { trustpilot: 4, contractDays: 18, champBest: 2, champTotal: 2, earliestDay: 3, firstOfMonthCount: 1 }, // Scott Toner
+  17: { trustpilot: 5, contractDays: 14, champBest: 1, champTotal: 2, earliestDay: 3, firstOfMonthCount: 2 }, // Jennifer Woo
+  11: { trustpilot: 4, contractDays: 16, champBest: 1, champTotal: 1, earliestDay: 4, firstOfMonthCount: 1 }, // Israe Rouri
+}
+
+function lifetimeFor(profile, idx) {
+  const base = LIFETIME_BY_PROFILE[profile] ?? LIFETIME_BY_PROFILE.steady
+  return { ...base, ...(LIFETIME_OVERRIDES[idx] ?? {}) }
+}
+
+// Longest run of consecutive months with zero pushed Ops.
+function longestNoPushRun(monthlyStats) {
+  let best = 0, run = 0
+  const sorted = [...monthlyStats].sort((a, b) => a.month.localeCompare(b.month))
+  for (const m of sorted) {
+    if ((m.pushedOps ?? 0) === 0) { run += 1; best = Math.max(best, run) }
+    else { run = 0 }
+  }
+  return best
+}
+
+// Revenue tier ladder (£ per month).
+const REVENUE_TIERS = [
+  { id: 'rev-100k', threshold: 100000 },
+  { id: 'rev-150k', threshold: 150000 },
+  { id: 'rev-200k', threshold: 200000 },
+]
+// Volume tier ladder (ops per month).
+const VOLUME_TIERS = [
+  { id: 'vol-15', threshold: 15 },
+  { id: 'vol-20', threshold: 20 },
+  { id: 'vol-25', threshold: 25 },
+  { id: 'vol-30', threshold: 30 },
+]
+// Reliability — months in a row with zero pushed Ops.
+const RELIABILITY_TIERS = [
+  { id: 'noPush-1', threshold: 1 },
+  { id: 'noPush-2', threshold: 2 },
+  { id: 'noPush-3', threshold: 3 },
+  { id: 'noPush-4', threshold: 4 },
+  { id: 'noPush-5', threshold: 5 },
+  { id: 'noPush-6', threshold: 6 },
+]
+// Fire — daily-fire best streak in days.
+const FIRE_BADGE_TIERS = [
+  { id: 'fire-7',  threshold: 7 },
+  { id: 'fire-15', threshold: 15 },
+  { id: 'fire-30', threshold: 30 },
+  { id: 'fire-45', threshold: 45 },
+  { id: 'fire-60', threshold: 60 },
+]
+// Trustpilot reviews (lifetime count).
+const REVIEW_TIERS = [
+  { id: 'reviews-1', threshold: 1 },
+  { id: 'reviews-2', threshold: 2 },
+  { id: 'reviews-3', threshold: 3 },
+  { id: 'reviews-4', threshold: 4 },
+  { id: 'reviews-5', threshold: 5 },
+  { id: 'reviews-6', threshold: 6 },
+]
+// Speed to cash — fastest new-contract → first invoice in days (lower better).
+const SPEED_TIERS = [
+  { id: 'speed-90', threshold: 90 },
+  { id: 'speed-60', threshold: 60 },
+  { id: 'speed-30', threshold: 30 },
+  { id: 'speed-15', threshold: 15 },
+  { id: 'speed-7',  threshold: 7 },
+]
+// Championship — quarterly #1 finishes (best consecutive run).
+const CHAMP_TIERS = [
+  { id: 'champ-1q',   threshold: 1 },
+  { id: 'champ-2q',   threshold: 2 },
+  { id: 'champ-3q',   threshold: 3 },
+  { id: 'champ-year', threshold: 4 },
+]
+
+function deriveLadder(tiers, value, latest, betterWhenLower = false) {
+  const earned = []
+  const earnedAt = {}
+  for (const t of tiers) {
+    const ok = betterWhenLower ? value <= t.threshold : value >= t.threshold
+    if (ok) {
+      earned.push(t.id)
+      earnedAt[t.id] = latest
+    }
+  }
+  return { earned, earnedAt }
+}
+
+function deriveMonthlyLadder(tiers, monthlyStats, key, betterWhenLower = false) {
+  // For monthly tiers, attribute to the first month each threshold was hit.
+  const earned = []
+  const earnedAt = {}
+  for (const t of tiers) {
+    const hit = monthlyStats.find((s) => {
+      const v = s[key] ?? 0
+      return betterWhenLower ? v <= t.threshold : v >= t.threshold
+    })
+    if (hit) {
+      earned.push(t.id)
+      earnedAt[t.id] = hit.month
+    }
+  }
+  return { earned, earnedAt }
+}
+
 export const CONSULTANTS = SEED.map((c, idx) => {
   const monthlyStats = buildMonthlyStats(c.profile, (idx % 4) - 1)
-  const earlyTier = deriveEarlyTierBadges(monthlyStats)
-  const streakTier = deriveStreakTierBadges(c.streak)
-  // De-dupe: SEED.badges may already mention some tier ids (legacy front-loader, on-fire).
-  const badges = Array.from(new Set([...c.badges, ...earlyTier.earned, ...streakTier.earned]))
-  const derivedAt = { ...earlyTier.earnedAt, ...streakTier.earnedAt }
+  const fire = buildFireData(c.profile, idx)
+  const lifetime = lifetimeFor(c.profile, idx)
+  const latest = MONTHS.at(-1)
+
+  // Each ladder is fully data-driven from monthly stats or lifetime counters.
+  const ladders = [
+    deriveEarlyTierBadges(monthlyStats),                                          // 40 → 90 %
+    deriveStreakTierBadges(c.streak),                                             // monthly streaks
+    deriveMonthlyLadder(REVENUE_TIERS, monthlyStats, 'invoiceValue'),             // 100/150/200k
+    deriveMonthlyLadder(VOLUME_TIERS,  monthlyStats, 'opsDelivered'),             // 15/20/25/30
+    deriveLadder(RELIABILITY_TIERS, longestNoPushRun(monthlyStats), latest),      // 1..6 mo
+    deriveLadder(FIRE_BADGE_TIERS,  fire.best, latest),                           // 7..60 days
+    deriveLadder(REVIEW_TIERS, lifetime.trustpilot, latest),                      // 1..6 reviews
+    deriveLadder(SPEED_TIERS,  lifetime.contractDays, latest, true),              // ≤90..7 days
+    deriveLadder(CHAMP_TIERS,  lifetime.champBest, latest),                       // 1..4 quarters
+  ]
+
+  // Singletons: first-of-the-month and earliest-day badges.
+  const earned = ladders.flatMap((l) => l.earned)
+  const earnedAt = Object.assign({}, ...ladders.map((l) => l.earnedAt))
+  if (lifetime.firstOfMonthCount >= 1) {
+    earned.push('first-of-month')
+    earnedAt['first-of-month'] = latest
+  }
+  if (lifetime.earliestDay <= 5) {
+    earned.push('day-5')
+    earnedAt['day-5'] = latest
+  }
+
+  const badges = Array.from(new Set(earned))
+
   return {
     id: `c-${String(idx + 1).padStart(2, '0')}`,
     name: c.name,
     role: c.role,
     location: c.location,
     badges,
-    badgeEarnedAt: buildBadgeEarnedAt(badges, idx, derivedAt),
+    badgeEarnedAt: buildBadgeEarnedAt(badges, idx, earnedAt),
     streaks: c.streak,
+    lifetime,
     monthlyStats,
-    fire: buildFireData(c.profile, idx),
+    fire,
   }
 })
 

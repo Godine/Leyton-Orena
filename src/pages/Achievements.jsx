@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Award } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
-import { RARITY_STYLES } from '../data/badges.js'
+import { RARITY_STYLES, BADGE_CATEGORIES, BADGES_BY_CATEGORY } from '../data/badges.js'
 import { closestToUnlock } from '../utils/badgeEligibility.js'
 import BadgeGrid from '../components/achievements/BadgeGrid.jsx'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
@@ -28,13 +28,21 @@ export default function Achievements() {
   const earnedMap = currentUser.badgeEarnedAt ?? {}
   const earnedBadgeIds = useMemo(() => currentUser.badges ?? [], [currentUser])
 
-  const filteredBadges = useMemo(() => {
-    return allBadges.filter((b) => {
+  const filteredCategories = useMemo(() => {
+    const matches = (b) => {
       if (rarityFilter !== 'all' && b.rarity !== rarityFilter) return false
       if (earnedOnly && !earnedMap[b.id]) return false
       return true
-    })
-  }, [allBadges, rarityFilter, earnedOnly, earnedMap])
+    }
+    return BADGE_CATEGORIES
+      .map((cat) => ({
+        ...cat,
+        badges: (BADGES_BY_CATEGORY[cat.id] ?? []).filter(matches),
+        earnedCount: (BADGES_BY_CATEGORY[cat.id] ?? []).filter((b) => earnedMap[b.id]).length,
+        totalCount: (BADGES_BY_CATEGORY[cat.id] ?? []).length,
+      }))
+      .filter((cat) => cat.badges.length > 0)
+  }, [rarityFilter, earnedOnly, earnedMap])
 
   const rarityCounts = useMemo(() => {
     const counts = { common: 0, rare: 0, epic: 0, legendary: 0, mythic: 0 }
@@ -84,14 +92,45 @@ export default function Achievements() {
         setEarnedOnly={setEarnedOnly}
       />
 
-      <BadgeGrid
-        badges={filteredBadges}
-        earnedMap={earnedMap}
-        unlockMonth={latestMonth}
-        hasSeenUnlock={(badgeId) => hasSeenUnlock(currentUser.id, badgeId)}
-        onUnlockSeen={(badgeId) => markUnlockSeen(currentUser.id, badgeId)}
-        onOpen={(b) => setOpenBadge(b)}
-      />
+      {filteredCategories.length === 0 ? (
+        <div className="arena-card text-center text-arena-muted py-12">
+          No badges match the current filters.
+        </div>
+      ) : (
+        <div className="space-y-8 xl:space-y-10">
+          {filteredCategories.map((cat) => (
+            <section key={cat.id} className="space-y-3">
+              <header className="flex items-center gap-3 flex-wrap">
+                <span
+                  className="h-9 w-9 rounded-2xl grid place-items-center text-lg"
+                  style={{ background: `${cat.accent}1f`, boxShadow: `inset 0 0 0 1px ${cat.accent}55` }}
+                >
+                  {cat.icon}
+                </span>
+                <h2 className="font-display font-black text-arena-ink text-lg">
+                  {cat.label}
+                </h2>
+                <span
+                  className="arena-chip text-[10px]"
+                  style={{ background: `${cat.accent}22`, color: cat.accent, boxShadow: `inset 0 0 0 1px ${cat.accent}55` }}
+                >
+                  {cat.earnedCount} / {cat.totalCount}
+                </span>
+                <span className="h-px flex-1 bg-arena-border" />
+                <span className="text-xs text-arena-muted hidden md:inline">{cat.description}</span>
+              </header>
+              <BadgeGrid
+                badges={cat.badges}
+                earnedMap={earnedMap}
+                unlockMonth={latestMonth}
+                hasSeenUnlock={(badgeId) => hasSeenUnlock(currentUser.id, badgeId)}
+                onUnlockSeen={(badgeId) => markUnlockSeen(currentUser.id, badgeId)}
+                onOpen={(b) => setOpenBadge(b)}
+              />
+            </section>
+          ))}
+        </div>
+      )}
 
       <BadgeDetailModal
         badge={openBadge}
