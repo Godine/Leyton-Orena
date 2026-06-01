@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint ."
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "framer-motion": "^11.11.17",
     "lucide-react": "^0.460.0",
