@@ -80,6 +80,8 @@ const SEED = [
   { name: 'David Kerr',          role: 'Financial', location: 'Glasgow',    profile: 'steady',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['iron-wall','sniper','early-bird'] },
   { name: 'Soufiane Mlah',       role: 'Financial', location: 'Casablanca', profile: 'inconsistent', streak: { currentMonthlyStreak: 1, bestMonthlyStreak: 2 }, badges: ['lab-rat','hat-trick','retention-shield'] },
   { name: 'Charlie Monger',      role: 'Financial', location: 'London',     profile: 'strong',       streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 4 }, badges: ['front-loader','on-fire','diamond-hands'] },
+  // Solo addition — appended at the end so all other indices stay stable.
+  { name: 'Issam El Ahmadi',     role: 'Technical', location: 'Casablanca', profile: 'steady',       seniority: 'Senior Consultant', streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 3 }, badges: [] },
 ]
 
 // Deterministically spreads a consultant's earned badges across the 6 months.
@@ -148,6 +150,7 @@ const FIRE_OVERRIDES = {
   4:  { current: 5,  best: 7,  density: 60 }, // Lucas — solid mid
   9:  { current: 4,  best: 6,  density: 58 }, // Louie
   23: { current: 4,  best: 8,  density: 60 }, // Charlie
+  24: { current: 3,  best: 5,  density: 55 }, // Issam — modest, below the 7-day Hot Week threshold
 }
 
 function fireConfigFor(profile, idx) {
@@ -300,6 +303,7 @@ const BADGE_CAPS = {
   8:  { early: 1, streak: 1, rev: 0, vol: 0, rel: 0, fire: 0 }, // Asad
   19: { early: 0, streak: 0, rev: 0, vol: 0, rel: 1, fire: 0 }, // Marco
   21: { early: 1, streak: 0, rev: 0, vol: 0, rel: 0, fire: 0 }, // David Kerr
+  24: { early: 2, streak: 1, rev: 0, vol: 0, rel: 1, fire: 0 }, // Issam — mid of the pack
   // others (2, 3, 6, 10, 12, 14, 15, 18, 22) → no derived badges
 }
 
@@ -452,6 +456,7 @@ export const CONSULTANTS = SEED.map((c, idx) => {
     id: `c-${String(idx + 1).padStart(2, '0')}`,
     name: c.name,
     role: c.role,
+    seniority: c.seniority ?? null,
     location: c.location,
     badges,
     badgeEarnedAt: buildBadgeEarnedAt(badges, idx, earnedAt),

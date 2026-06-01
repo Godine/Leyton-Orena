@@ -19,6 +19,7 @@ const JOIN_DATES = {
   'c-14': 'Aug 2021', 'c-15': 'Feb 2024', 'c-16': 'Jun 2022', 'c-17': 'Nov 2020',
   'c-18': 'Apr 2021', 'c-19': 'Sep 2023', 'c-20': 'Jan 2022', 'c-21': 'May 2024',
   'c-22': 'Oct 2019', 'c-23': 'Mar 2024', 'c-24': 'Jul 2020',
+  'c-25': 'Sep 2019',
 }
 
 export default function Profile() {

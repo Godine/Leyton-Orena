@@ -28,6 +28,11 @@ export default function ProfileHeader({ consultant, totals, joinDate = 'Mar 2022
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="arena-chip bg-arena-surface2 text-arena-muted">{consultant.role}</span>
+            {consultant.seniority && (
+              <span className="arena-chip bg-accent-amber/15 text-accent-amber" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,200,0,0.4)' }}>
+                {consultant.seniority}
+              </span>
+            )}
             <LocationPill location={consultant.location} />
             <span className="text-xs text-arena-muted">Member since {joinDate}</span>
           </div>
