@@ -9,6 +9,9 @@ import TrendChart from '../components/profile/TrendChart.jsx'
 import BadgeShowcase from '../components/profile/BadgeShowcase.jsx'
 import StreakDisplay from '../components/profile/StreakDisplay.jsx'
 import PersonalRecords from '../components/profile/PersonalRecords.jsx'
+import NextBadges from '../components/profile/NextBadges.jsx'
+import ActivityHeatmap from '../components/profile/ActivityHeatmap.jsx'
+import CategoryProgress from '../components/profile/CategoryProgress.jsx'
 import FireStreak from '../components/shared/FireStreak.jsx'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 
@@ -85,6 +88,11 @@ export default function Profile() {
   )
   const nextBadge = useMemo(() => closestToUnlock(consultant, allBadges), [consultant, allBadges])
 
+  const todayStr = useMemo(
+    () => new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    [],
+  )
+
   return (
     <div className="space-y-6 xl:space-y-8">
       <header className="flex flex-col gap-3">
@@ -93,9 +101,14 @@ export default function Profile() {
             <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow">
               <User className="text-accent-green" size={24} strokeWidth={2.4} />
             </div>
-            <h1 className="text-3xl md:text-4xl xl:text-5xl font-display font-black">
-              <span className="text-accent-green">My Profile</span>
-            </h1>
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-arena-muted font-display font-bold">
+                {todayStr}
+              </span>
+              <h1 className="text-3xl md:text-4xl xl:text-5xl font-display font-black leading-none">
+                <span className="text-accent-green">My Profile</span>
+              </h1>
+            </div>
           </div>
           <ConsultantSelector
             consultants={consultants}
@@ -119,7 +132,12 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-6">
         <div className="lg:col-span-2 xl:col-span-3 space-y-4 xl:space-y-6">
           <TrendChart stats={[...consultant.monthlyStats].sort((a, b) => a.month.localeCompare(b.month))} />
+          <ActivityHeatmap
+            log={consultant.fire?.log ?? []}
+            todayIso={consultant.fire?.todayIso}
+          />
           <RankSummary rank={rank} total={total} delta={deltaPositions} role={consultant.role} />
+          <CategoryProgress earnedIds={consultant.badges ?? []} />
         </div>
         <div className="space-y-4">
           <FireStreak
@@ -133,6 +151,11 @@ export default function Profile() {
           <StreakDisplay
             current={consultant.streaks?.currentMonthlyStreak ?? 0}
             best={consultant.streaks?.bestMonthlyStreak ?? 0}
+          />
+          <NextBadges
+            consultant={consultant}
+            allBadges={allBadges}
+            onOpenBadge={(b) => setOpenBadge(b)}
           />
           <PersonalRecords consultant={consultant} />
           <BadgeShowcase

@@ -6,143 +6,43 @@
       <stop offset="100%" stop-color="#0F1845"/>
     </linearGradient>
     <radialGradient id="glow1" cx="15%" cy="0%" r="60%">
-      <stop offset="0%"   stop-color="rgba(247,92,3,0.35)"/>
+      <stop offset="0%"   stop-color="rgba(247,92,3,0.30)"/>
       <stop offset="100%" stop-color="rgba(247,92,3,0)"/>
     </radialGradient>
     <radialGradient id="glow2" cx="100%" cy="100%" r="60%">
-      <stop offset="0%"   stop-color="rgba(255,200,0,0.18)"/>
+      <stop offset="0%"   stop-color="rgba(255,200,0,0.15)"/>
       <stop offset="100%" stop-color="rgba(255,200,0,0)"/>
     </radialGradient>
-
-    <!-- Logo gradients -->
-    <linearGradient id="L-tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"   stop-color="#FFB54D"/>
-      <stop offset="50%"  stop-color="#F75C03"/>
-      <stop offset="100%" stop-color="#8E3300"/>
-    </linearGradient>
-    <radialGradient id="L-vignette" cx="50%" cy="100%" r="80%">
-      <stop offset="55%"  stop-color="#000000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
-    </radialGradient>
-    <linearGradient id="L-shine" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.55"/>
-      <stop offset="55%"  stop-color="#ffffff" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="L-ring" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#FFF6E1"/>
-      <stop offset="100%" stop-color="#E5BD89"/>
-    </linearGradient>
-    <radialGradient id="L-sand" cx="50%" cy="40%" r="80%">
-      <stop offset="0%"   stop-color="#7E2A00"/>
-      <stop offset="100%" stop-color="#3F1500"/>
-    </radialGradient>
-    <linearGradient id="L-blade" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="#A9B0BE"/>
-      <stop offset="35%"  stop-color="#FFFFFF"/>
-      <stop offset="65%"  stop-color="#E0E3EA"/>
-      <stop offset="100%" stop-color="#7B8290"/>
-    </linearGradient>
-    <linearGradient id="L-hilt" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#FFE07A"/>
-      <stop offset="100%" stop-color="#9C7012"/>
-    </linearGradient>
-    <linearGradient id="word-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#FFCB7A"/>
-      <stop offset="50%"  stop-color="#F75C03"/>
-      <stop offset="100%" stop-color="#C44A02"/>
-    </linearGradient>
-
-    <!-- Tiny arena O for inside the Leyton wordmark -->
-    <linearGradient id="word-ring" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#FFD8A3"/>
-      <stop offset="100%" stop-color="#F75C03"/>
-    </linearGradient>
   </defs>
 
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect width="1200" height="630" fill="url(#glow1)"/>
   <rect width="1200" height="630" fill="url(#glow2)"/>
 
-  <!-- Big reflective logo on the left, scaled 5x -->
+  <!-- Big minimal mark on the left, scaled 5× -->
   <g transform="translate(90 155) scale(5)">
-    <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#L-tile)"/>
-    <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#L-vignette)"/>
-    <ellipse cx="32" cy="34" rx="22" ry="17" fill="url(#L-ring)"/>
-    <ellipse cx="32" cy="35" rx="16.5" ry="11.5" fill="url(#L-sand)"/>
-    <g stroke="#9A6B26" stroke-width="0.85" stroke-linecap="round" opacity="0.85">
-      <line x1="32"   y1="19"   x2="32"   y2="22"/>
-      <line x1="42"   y1="20.5" x2="41"   y2="23.4"/>
-      <line x1="49.5" y1="25"   x2="47.6" y2="27"/>
-      <line x1="53"   y1="34"   x2="50"   y2="34"/>
-      <line x1="49.5" y1="43"   x2="47.6" y2="41"/>
-      <line x1="42"   y1="47.5" x2="41"   y2="44.6"/>
-      <line x1="32"   y1="49"   x2="32"   y2="46"/>
-      <line x1="22"   y1="47.5" x2="23"   y2="44.6"/>
-      <line x1="14.5" y1="43"   x2="16.4" y2="41"/>
-      <line x1="11"   y1="34"   x2="14"   y2="34"/>
-      <line x1="14.5" y1="25"   x2="16.4" y2="27"/>
-      <line x1="22"   y1="20.5" x2="23"   y2="23.4"/>
+    <rect width="64" height="64" rx="14" fill="#F75C03"/>
+    <circle cx="32" cy="32" r="20" fill="none" stroke="#F5E6CA" stroke-width="8"/>
+    <g fill="#F75C03">
+      <rect x="-4" y="28" width="72" height="8" transform="rotate(45 32 32)"/>
+      <rect x="-4" y="28" width="72" height="8" transform="rotate(-45 32 32)"/>
     </g>
-    <g transform="rotate(-40 32 32)">
-      <rect x="30.7" y="10" width="2.6" height="32" rx="0.6" fill="url(#L-blade)"/>
-      <path d="M 30.7 42 L 32 46 L 33.3 42 Z" fill="url(#L-blade)"/>
-      <rect x="25.5" y="9.4" width="13" height="2.4" rx="1.2" fill="url(#L-hilt)"/>
-      <rect x="31" y="4.2" width="2" height="5.4" fill="#3A1F08"/>
-      <circle cx="32" cy="4.2" r="1.6" fill="url(#L-hilt)"/>
-    </g>
-    <g transform="rotate(40 32 32)">
-      <rect x="30.7" y="10" width="2.6" height="32" rx="0.6" fill="url(#L-blade)"/>
-      <path d="M 30.7 42 L 32 46 L 33.3 42 Z" fill="url(#L-blade)"/>
-      <rect x="25.5" y="9.4" width="13" height="2.4" rx="1.2" fill="url(#L-hilt)"/>
-      <rect x="31" y="4.2" width="2" height="5.4" fill="#3A1F08"/>
-      <circle cx="32" cy="4.2" r="1.6" fill="url(#L-hilt)"/>
-    </g>
-    <circle cx="32" cy="32" r="1.4" fill="url(#L-hilt)" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/>
-    <path d="M 12 2 L 52 2 Q 62 2 62 12 L 62 22 Q 32 32 2 20 L 2 12 Q 2 2 12 2 Z" fill="url(#L-shine)"/>
-    <rect x="2.5" y="2.5" width="59" height="59" rx="13.5" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
   </g>
 
-  <!-- Leyton wordmark, with the O as a mini arena -->
+  <!-- Wordmark — the O of Leyton is the mark in miniature -->
   <g font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="124" fill="#f5f5fb">
     <text x="510" y="295">Leyt</text>
-    <!-- 'O' arena, sized to match the cap height of the surrounding text -->
     <g transform="translate(696 200)">
-      <ellipse cx="50" cy="65" rx="50" ry="50" fill="url(#word-ring)"/>
-      <ellipse cx="50" cy="65" rx="34" ry="34" fill="url(#L-sand)"/>
-      <g stroke="#9A6B26" stroke-width="2" stroke-linecap="round" opacity="0.9">
-        <line x1="50" y1="20" x2="50" y2="28"/>
-        <line x1="82" y1="34" x2="76" y2="40"/>
-        <line x1="95" y1="65" x2="87" y2="65"/>
-        <line x1="82" y1="96" x2="76" y2="90"/>
-        <line x1="50" y1="110" x2="50" y2="102"/>
-        <line x1="18" y1="96" x2="24" y2="90"/>
-        <line x1="5"  y1="65" x2="13" y2="65"/>
-        <line x1="18" y1="34" x2="24" y2="40"/>
-      </g>
-      <!-- Crossed swords in the wordmark O -->
-      <g transform="translate(50 65)">
-        <g transform="rotate(-40)">
-          <rect x="-2" y="-46" width="4" height="78" rx="1" fill="url(#L-blade)"/>
-          <path d="M -2 32 L 0 40 L 2 32 Z" fill="url(#L-blade)"/>
-          <rect x="-12" y="-48" width="24" height="5" rx="2.5" fill="url(#L-hilt)"/>
-          <rect x="-2" y="-58" width="4" height="11" fill="#3A1F08"/>
-          <circle cx="0" cy="-58" r="3.2" fill="url(#L-hilt)"/>
-        </g>
-        <g transform="rotate(40)">
-          <rect x="-2" y="-46" width="4" height="78" rx="1" fill="url(#L-blade)"/>
-          <path d="M -2 32 L 0 40 L 2 32 Z" fill="url(#L-blade)"/>
-          <rect x="-12" y="-48" width="24" height="5" rx="2.5" fill="url(#L-hilt)"/>
-          <rect x="-2" y="-58" width="4" height="11" fill="#3A1F08"/>
-          <circle cx="0" cy="-58" r="3.2" fill="url(#L-hilt)"/>
-        </g>
-        <circle r="3" fill="url(#L-hilt)" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+      <circle cx="50" cy="65" r="42" fill="none" stroke="#F5E6CA" stroke-width="14"/>
+      <g fill="#1a1a2e">
+        <rect x="-14" y="58" width="128" height="14" transform="rotate(45 50 65)"/>
+        <rect x="-14" y="58" width="128" height="14" transform="rotate(-45 50 65)"/>
       </g>
     </g>
     <text x="800" y="295">n</text>
   </g>
   <text x="510" y="425" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="124"
-        fill="url(#word-grad)">Arena</text>
+        fill="#F75C03">Arena</text>
 
   <text x="512" y="485" font-family="'DM Sans', system-ui, sans-serif" font-weight="500" font-size="32"
         fill="#a0a0c0">R&amp;D delivery, gamified.</text>
