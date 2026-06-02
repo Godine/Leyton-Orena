@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Gift, Coins, Check, Sparkles, X } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import {
-  useRewardStore, REWARDS, REWARD_CATEGORIES, rarityBreakdown,
+  useRewardStore, REWARDS, REWARD_CATEGORIES, rarityBreakdown, pointsForBadges,
 } from '../store/useRewardStore.js'
 import { useNotificationStore } from '../store/useNotificationStore.js'
 import AnimatedCounter from '../components/shared/AnimatedCounter.jsx'
@@ -20,13 +20,30 @@ function timeAgo(ts) {
 
 export default function Rewards() {
   const currentUser = useArenaStore((s) => s.getCurrentUser())
-  const balanceFor = useRewardStore((s) => s.balanceFor)
+  // Subscribe to the raw redemptions array, not a function call. Calling a
+  // store method inside a selector returns a new array each render, which
+  // makes Zustand think the state changed and triggers an infinite re-render
+  // loop that bubbles up as an error to the ErrorBoundary.
+  const redemptions = useRewardStore((s) => s.redemptions)
   const redeem = useRewardStore((s) => s.redeem)
-  const history = useRewardStore((s) => s.history(currentUser.id))
   const addNotification = useNotificationStore((s) => s.addNotification)
 
-  const balance = balanceFor(currentUser)
-  const breakdown = useMemo(() => rarityBreakdown(currentUser.badges), [currentUser.badges])
+  const balance = useMemo(() => {
+    const earned = pointsForBadges(currentUser?.badges)
+    const spent = redemptions
+      .filter((r) => r.consultantId === currentUser?.id)
+      .reduce((acc, r) => acc + (REWARDS.find((x) => x.id === r.rewardId)?.cost ?? 0), 0)
+    return { earned, spent, balance: earned - spent }
+  }, [redemptions, currentUser])
+
+  const history = useMemo(
+    () => redemptions
+      .filter((r) => r.consultantId === currentUser?.id)
+      .sort((a, b) => b.at - a.at),
+    [redemptions, currentUser],
+  )
+
+  const breakdown = useMemo(() => rarityBreakdown(currentUser?.badges ?? []), [currentUser])
 
   const [pending, setPending] = useState(null)
   const [justRedeemed, setJustRedeemed] = useState(null)
