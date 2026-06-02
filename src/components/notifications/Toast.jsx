@@ -15,7 +15,7 @@ export default function Toast() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 360, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-          className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 max-w-[min(360px,calc(100vw-2rem))]"
+          className="fixed bottom-6 right-4 md:right-6 z-50 max-w-[min(360px,calc(100vw-2rem))]"
         >
           <button
             onClick={() => { setOpen(true); dismiss() }}
