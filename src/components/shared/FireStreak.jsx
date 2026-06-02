@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Flame } from 'lucide-react'
+import FireStreakDetailModal from './FireStreakDetailModal.jsx'
 
 // Visual representation of a consultant's daily fire streak. The flame size,
 // color, and glow intensity all scale with the current streak so a 1-day fire
@@ -39,11 +41,23 @@ export default function FireStreak({
   const isPersonalBest = current > 0 && current >= best
   const hero = variant === 'hero'
   const todayMoves = todayIso ? moves.filter((m) => m.date === todayIso) : []
+  const [detailOpen, setDetailOpen] = useState(false)
 
   return (
+    <>
     <section
+      role="button"
+      tabIndex={0}
+      aria-label="View 14-day fire breakdown"
+      onClick={() => setDetailOpen(true)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setDetailOpen(true)
+        }
+      }}
       className={[
-        'relative arena-card overflow-hidden',
+        'relative arena-card overflow-hidden cursor-pointer transition-shadow hover:shadow-[0_0_24px_rgba(247,92,3,0.20)]',
         hero ? 'p-5 md:p-6' : 'p-4',
       ].join(' ')}
       style={{
@@ -187,5 +201,15 @@ export default function FireStreak({
         </div>
       )}
     </section>
+    <FireStreakDetailModal
+      open={detailOpen}
+      onClose={() => setDetailOpen(false)}
+      log={log}
+      moves={moves}
+      todayIso={todayIso}
+      current={current}
+      best={best}
+    />
+    </>
   )
 }
