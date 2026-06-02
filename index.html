@@ -3,7 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#F75C03" />
+    <meta name="description" content="Leyton Arena — a gamified leaderboard for R&D tax consultants. Streaks, badges, duels, and rewards." />
     <title>Leyton Arena</title>
+
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
+    <link rel="mask-icon" href="/logo.svg" color="#F75C03" />
+
+    <meta property="og:title" content="Leyton Arena" />
+    <meta property="og:description" content="R&D delivery, gamified. Streaks, badges, duels, and rewards for the Leyton team." />
+    <meta property="og:image" content="/og-image.svg" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Leyton Arena" />
+    <meta name="twitter:description" content="R&D delivery, gamified." />
+    <meta name="twitter:image" content="/og-image.svg" />
+
+    <script>
+      // Apply persisted theme before React mounts to avoid a flash of dark
+      // content when the user has selected light mode.
+      (function() {
+        try {
+          var t = localStorage.getItem('arena-theme');
+          if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+          else document.documentElement.dataset.theme = 'dark';
+        } catch (e) {}
+      })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

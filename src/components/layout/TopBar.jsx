@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { User, Settings } from 'lucide-react'
 import NotificationBell from '../notifications/NotificationBell.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
 
 // Quick-access actions that live next to the notification bell rather than in
 // the bottom tab bar (keeps the mobile tab bar lean).
@@ -41,6 +42,7 @@ export default function TopBar() {
           )}
         </NavLink>
       ))}
+      <ThemeToggle />
       <NotificationBell />
     </div>
   )

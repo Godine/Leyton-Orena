@@ -1,0 +1,76 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Leyton Arena — R&amp;D delivery, gamified">
+  <title>Leyton Arena</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0F1845"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="15%" cy="0%" r="60%">
+      <stop offset="0%"   stop-color="rgba(247,92,3,0.35)"/>
+      <stop offset="100%" stop-color="rgba(247,92,3,0)"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="100%" cy="100%" r="60%">
+      <stop offset="0%"   stop-color="rgba(255,200,0,0.18)"/>
+      <stop offset="100%" stop-color="rgba(255,200,0,0)"/>
+    </radialGradient>
+    <linearGradient id="logo-body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#FFB54D"/>
+      <stop offset="48%"  stop-color="#F75C03"/>
+      <stop offset="100%" stop-color="#8E3300"/>
+    </linearGradient>
+    <linearGradient id="logo-shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="60%"  stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="logo-vignette" cx="50%" cy="100%" r="80%">
+      <stop offset="55%"  stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
+    </radialGradient>
+    <linearGradient id="wordmark-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#FFCB7A"/>
+      <stop offset="50%"  stop-color="#F75C03"/>
+      <stop offset="100%" stop-color="#C44A02"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Logo tile (reflective) -->
+  <g transform="translate(100 195) scale(4)">
+    <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#logo-body)"/>
+    <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#logo-vignette)"/>
+    <path d="M 12 2 L 52 2 Q 62 2 62 12 L 62 24 Q 32 36 2 22 L 2 12 Q 2 2 12 2 Z" fill="url(#logo-shine)"/>
+    <rect x="2.5" y="2.5" width="59" height="59" rx="13.5" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+    <path d="M 36 16 L 21 36 L 30 36 L 25 50 L 43 28 L 34 28 L 38 16 Z"
+          fill="#ffffff" stroke="rgba(0,0,0,0.18)" stroke-width="0.6" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="430" y="295" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="112"
+        fill="#f5f5fb">Leyton</text>
+  <text x="430" y="415" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="112"
+        fill="url(#wordmark-grad)">Arena</text>
+
+  <!-- Tagline -->
+  <text x="432" y="475" font-family="'DM Sans', system-ui, sans-serif" font-weight="500" font-size="32"
+        fill="#a0a0c0">R&amp;D delivery, gamified.</text>
+
+  <!-- Subtle bottom-right chips -->
+  <g transform="translate(430 510)" font-family="Nunito, system-ui, sans-serif" font-weight="800" font-size="22">
+    <g transform="translate(0 0)">
+      <rect x="0" y="0" rx="14" ry="14" width="170" height="40" fill="rgba(247,92,3,0.15)" stroke="rgba(247,92,3,0.45)"/>
+      <text x="20" y="27" fill="#F75C03">🔥 Daily fire</text>
+    </g>
+    <g transform="translate(190 0)">
+      <rect x="0" y="0" rx="14" ry="14" width="170" height="40" fill="rgba(255,200,0,0.12)" stroke="rgba(255,200,0,0.4)"/>
+      <text x="20" y="27" fill="#ffc800">🏆 Leaderboard</text>
+    </g>
+    <g transform="translate(380 0)">
+      <rect x="0" y="0" rx="14" ry="14" width="140" height="40" fill="rgba(28,176,246,0.12)" stroke="rgba(28,176,246,0.4)"/>
+      <text x="20" y="27" fill="#1cb0f6">⚔️ Duels</text>
+    </g>
+  </g>
+</svg>

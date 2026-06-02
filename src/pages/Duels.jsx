@@ -550,7 +550,7 @@ function LeadSparkline({ points, leaderId, aId }) {
           animate={{ pathLength: 1 }}
           transition={{ duration: 0.9, ease: 'easeOut' }}
         />
-        <circle cx={lastX} cy={lastY} r={4} fill={leaderColor} stroke="#1a1a2e" strokeWidth={2} />
+        <circle cx={lastX} cy={lastY} r={4} fill={leaderColor} stroke="rgb(var(--arena-bg-rgb))" strokeWidth={2} />
       </svg>
     </div>
   )

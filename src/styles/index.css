@@ -3,16 +3,47 @@
 @tailwind utilities;
 
 :root {
-  --arena-bg: #1a1a2e;
-  --arena-surface: #22223d;
-  --arena-surface-2: #2a2a4a;
-  --arena-border: #34345a;
-  --arena-green: #F75C03;
+  /* Dark (default) — RGB channels for tailwind's `rgb(var() / <alpha>)` pattern */
+  --arena-bg-rgb:       26  26  46;
+  --arena-surface-rgb:  34  34  61;
+  --arena-surface2-rgb: 42  42  74;
+  --arena-card-rgb:     30  42  71;
+  --arena-border-rgb:   52  52  90;
+  --arena-ink-rgb:     245 245 251;
+  --arena-muted-rgb:   160 160 192;
+
+  /* Legacy non-rgb vars for occasional inline use */
+  --arena-bg: rgb(var(--arena-bg-rgb));
+  --arena-surface: rgb(var(--arena-surface-rgb));
+  --arena-surface-2: rgb(var(--arena-surface2-rgb));
+  --arena-border: rgb(var(--arena-border-rgb));
+  --arena-ink: rgb(var(--arena-ink-rgb));
+  --arena-muted: rgb(var(--arena-muted-rgb));
+
+  /* Brand accents (same in both themes) */
+  --arena-green:      #F75C03;
   --arena-green-dark: #C44A02;
-  --arena-amber: #ffc800;
-  --arena-coral: #ff4b4b;
-  --arena-ink: #f5f5fb;
-  --arena-muted: #a0a0c0;
+  --arena-amber:      #ffc800;
+  --arena-coral:      #ff4b4b;
+
+  --arena-bg-overlay-1: rgba(247, 92, 3, 0.07);
+  --arena-bg-overlay-2: rgba(255, 75, 75, 0.06);
+}
+
+[data-theme='light'] {
+  --arena-bg-rgb:       248 249 252;
+  --arena-surface-rgb:  255 255 255;
+  --arena-surface2-rgb: 240 241 247;
+  --arena-card-rgb:     255 255 255;
+  --arena-border-rgb:   218 222 234;
+  --arena-ink-rgb:       26  26  46;
+  --arena-muted-rgb:     97 100 128;
+
+  --arena-bg-overlay-1: rgba(247, 92, 3, 0.10);
+  --arena-bg-overlay-2: rgba(255, 200, 0, 0.08);
+
+  /* Card shadow needs to be visible on a light surface */
+  --arena-card-shadow: 0 1px 0 0 rgba(0,0,0,0.04), 0 6px 18px -8px rgba(15,24,69,0.18);
 }
 
 html, body, #root {
@@ -21,17 +52,28 @@ html, body, #root {
 
 html {
   scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
-/* Accessible focus ring everywhere — keyboard only. */
+[data-theme='light'] html,
+html[data-theme='light'],
+:where([data-theme='light']) {
+  color-scheme: light;
+}
+
+/* Smooth swap between themes — only colour-affecting properties so layout
+   transitions stay snappy. */
+body, .arena-card, .arena-chip,
+button, input, select, textarea, [class*='bg-arena'], [class*='text-arena'] {
+  transition: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
+}
+
 :focus-visible {
   outline: 2px solid var(--arena-green);
   outline-offset: 2px;
   border-radius: 8px;
 }
 
-/* Mute the focus ring on mouse clicks (browsers do this by default with
-   :focus-visible — keep it for completeness). */
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible),
 input:focus:not(:focus-visible),
@@ -53,8 +95,8 @@ body {
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   background-image:
-    radial-gradient(circle at 20% 0%, rgba(247, 92, 3, 0.07), transparent 40%),
-    radial-gradient(circle at 90% 100%, rgba(255, 75, 75, 0.06), transparent 40%);
+    radial-gradient(circle at 20% 0%,   var(--arena-bg-overlay-1), transparent 40%),
+    radial-gradient(circle at 90% 100%, var(--arena-bg-overlay-2), transparent 40%);
 }
 
 h1, h2, h3, h4 {
@@ -67,12 +109,14 @@ h1, h2, h3, h4 {
   .arena-card {
     @apply bg-arena-surface border border-arena-border rounded-2xl p-5 shadow-card;
   }
+  [data-theme='light'] .arena-card {
+    box-shadow: var(--arena-card-shadow);
+  }
   .arena-chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider;
   }
 }
 
-/* Hide scrollbar polish */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #34345a; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--arena-border-rgb)); border-radius: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }

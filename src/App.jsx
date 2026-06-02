@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import AppShell from './components/layout/AppShell.jsx'
@@ -6,6 +6,7 @@ import ErrorBoundary from './components/shared/ErrorBoundary.jsx'
 import { PageSkeleton } from './components/shared/SkeletonLoader.jsx'
 import DemoModeDriver from './components/admin/DemoModeDriver.jsx'
 import WalkthroughOverlay from './components/admin/WalkthroughOverlay.jsx'
+import { useArenaStore } from './store/useArenaStore.js'
 
 const Home         = lazy(() => import('./pages/Home.jsx'))
 const Leaderboard  = lazy(() => import('./pages/Leaderboard.jsx'))
@@ -20,6 +21,12 @@ const Admin        = lazy(() => import('./pages/Admin.jsx'))
 
 export default function App() {
   const location = useLocation()
+  const theme = useArenaStore((s) => s.theme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
   return (
     <AppShell>
       <ErrorBoundary>

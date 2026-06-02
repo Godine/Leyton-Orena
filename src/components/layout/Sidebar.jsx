@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { NAV_ITEMS } from './navConfig.js'
 import RoleSwitcher from './RoleSwitcher.jsx'
+import Logo from '../Logo.jsx'
 
 export default function Sidebar() {
   return (
@@ -57,15 +58,13 @@ export default function Sidebar() {
 
 function Wordmark() {
   return (
-    <div className="flex items-center gap-2 select-none">
-      <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-arena-green to-arena-amber grid place-items-center shadow-glow">
-        <span className="font-display font-black text-arena-bg text-lg">L</span>
-      </div>
+    <div className="flex items-center gap-2.5 select-none">
+      <Logo size={40} className="shrink-0 drop-shadow-[0_4px_18px_rgba(247,92,3,0.45)]" />
       <div className="leading-none">
-        <div className="font-display font-black text-xl tracking-tight">
+        <div className="font-display font-black text-xl tracking-tight text-arena-ink">
           Leyton<span className="text-arena-green"> Arena</span>
         </div>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-arena-muted mt-1">R&amp;D Tax · MVP</div>
+        <div className="text-[10px] uppercase tracking-[0.2em] text-arena-muted mt-1">R&amp;D delivery · gamified</div>
       </div>
     </div>
   )

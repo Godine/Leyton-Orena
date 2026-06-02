@@ -114,7 +114,7 @@ export default function TrendChart({ stats }) {
           transition={{ duration: 1.0, ease: 'easeOut' }}
         />
         {opsPoints.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={3.5} fill="#F75C03" stroke="#1a1a2e" strokeWidth={2} />
+          <circle key={i} cx={x} cy={y} r={3.5} fill="#F75C03" stroke="rgb(var(--arena-bg-rgb))" strokeWidth={2} />
         ))}
 
         {/* month labels */}
