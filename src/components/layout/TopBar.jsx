@@ -4,6 +4,7 @@ import { User, Settings } from 'lucide-react'
 import NotificationBell from '../notifications/NotificationBell.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import MobileMenu from './MobileMenu.jsx'
+import RewardsBalance from './RewardsBalance.jsx'
 
 // Quick-access actions that live next to the notification bell rather than in
 // the bottom tab bar (keeps the mobile tab bar lean).
@@ -28,7 +29,7 @@ export default function TopBar() {
             title={action.label}
             className={({ isActive }) =>
               [
-                'relative h-10 w-10 grid place-items-center rounded-full border transition-colors',
+                'relative h-10 w-10 hidden md:grid place-items-center rounded-full border transition-colors',
                 isActive
                   ? 'bg-accent-green/15 border-accent-green/50 text-accent-green'
                   : 'bg-arena-surface border-arena-border text-arena-ink hover:border-accent-green/50',
@@ -49,6 +50,7 @@ export default function TopBar() {
           </NavLink>
         ))}
         <ThemeToggle />
+        <RewardsBalance />
         <NotificationBell />
       </div>
     </div>
