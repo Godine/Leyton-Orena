@@ -6,31 +6,39 @@ import { useArenaStore } from '../../store/useArenaStore.js'
 const STEPS = [
   {
     title: 'Welcome to Leyton Arena',
-    body: 'A gamified leaderboard for R&D tax consultants. Six pages, one shared store, zero backend.',
+    body: 'A gamified leaderboard for R&D tax consultants. Eleven pages, one shared store, zero backend.',
   },
   {
     title: 'Home — your morning coffee',
-    body: 'Quick stats with progress rings, live monthly challenges, team activity, and records under threat.',
+    body: 'Quick stats with progress rings, live monthly challenges, head-to-head duels, team activity, and records under threat.',
   },
   {
     title: 'Leaderboard',
-    body: 'Top-3 podium with sparklines, filterable table that smoothly reorders as you change period, metric, or location.',
+    body: 'Top-3 podium with sparklines, filterable table that smoothly reorders as you change period, metric, or location. Click any row to jump straight to that consultant\'s profile.',
   },
   {
     title: 'Achievements',
-    body: '14 badges with rarity tiers. Locked badges show progress; new unlocks burst with a particle animation.',
-  },
-  {
-    title: 'Records & Profile',
-    body: 'A Hall of Fame for all-time bests with threat alerts, and a per-consultant profile with rings, trend chart, and streak flame.',
+    body: '40+ badges grouped into nine categories — early invoicing, monthly streaks, revenue, volume, client voice, speed to cash, championship, reliability, and daily fire. Each is a ladder from Common to Mythic.',
   },
   {
     title: 'Daily fire',
-    body: 'Every consultant has a daily fire that grows when they advance at least one claim by one stage in the Leyton workflow (Handover → Overview → Scoping → Tech Report → Costs → Assessment → Invoiced).',
+    body: 'Every consultant has a daily fire that grows when they advance at least one claim by one stage in the Leyton workflow (Handover → Overview → Scoping → Tech Report → Costs → Assessment → Invoiced). Click the flame for a 14-day breakdown.',
+  },
+  {
+    title: 'Duels, Rewards & Wrapped',
+    body: 'Challenge a peer 1:1 in /duels (pick metric, duration, stake — spectators can cheer). Cash badges in for real treats in /rewards (10–250 pts per rarity). Generate an end-of-quarter Spotify-style recap in /wrapped.',
+  },
+  {
+    title: 'Manager, Compare & Admin',
+    body: 'Managers see team rollups, "on fire" vs "needs attention" lists, and a roster table in /manager. /compare puts two consultants side-by-side. /admin edits stats, targets, challenges, demo mode, and the Teams webhook.',
+  },
+  {
+    title: 'Search & shortcuts',
+    body: 'Hit ⌘K (or Ctrl+K) anywhere to fuzzy-search consultants, badges, and pages. The hamburger drawer on mobile, the sidebar on desktop, and the points pill in the top-right are always one tap away.',
   },
   {
     title: 'You\'re ready',
-    body: 'Use the role switcher in the sidebar and the "view as" selector on Profile to demo different perspectives.',
+    body: 'Use the role switcher (Technical / Financial) in the sidebar and the "view as" selector on Profile to demo different perspectives. Flip the theme toggle for dark/light. Throw down a duel.',
   },
 ]
 

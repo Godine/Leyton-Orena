@@ -6,7 +6,7 @@ import { useNotificationStore } from '../../store/useNotificationStore.js'
 //   - cycles `currentUserId` through every consultant every 8s
 //   - drops a sample notification (which triggers a toast) every 12s
 const SAMPLE_NOTIFS = [
-  { kind: 'badge',     title: 'Demo · 🏔️ Peak Month unlocked!', body: 'Personal best invoice month — bagged it.' },
+  { kind: 'badge',     title: 'Demo · 💰 Six-Figure Month unlocked!', body: 'First £100k invoice month of the year — bagged it.' },
   { kind: 'rank',      title: 'Demo · You moved up to #2',       body: 'Climbing fast. Hold the line.' },
   { kind: 'record',    title: 'Demo · 88% of the all-time record', body: 'One more big invoice and you take it.' },
   { kind: 'challenge', title: 'Demo · Ops Blitz 80%',             body: 'Team is one Op away from clinching it.' },

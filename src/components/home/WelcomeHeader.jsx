@@ -2,18 +2,21 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 
 const LINES = [
-  'Every Op delivered is a client better off. Let\'s go.',
+  'Every claim delivered is a client better off. Let\'s go.',
   'The Arena doesn\'t sleep. Neither does your pipeline.',
   'Front-load your month. Future you will thank you.',
   'Records exist to be broken. Why not today?',
-  'Streaks are built one Op at a time.',
-  'Show up. Ship work. Stack badges.',
+  'Streaks are built one stage advance at a time.',
+  'Show up. Ship claims. Stack badges.',
   'Small wins, compounded daily, equal legendary months.',
   'The leaderboard rewards consistency more than heroics.',
-  'Closed Ops > open tabs.',
+  'Closed claims > open tabs.',
   'Pace yourself. Then beat that pace.',
-  'One clean invoice can change a quarter.',
+  'One clean invoice on day 5 can change a quarter.',
   'The team that ships together, wins together.',
+  'Move one claim today. Keep the fire alive.',
+  'Day 15 is closer than you think.',
+  'A Trustpilot review is the loudest scoreboard.',
 ]
 
 function pickDailyLine() {

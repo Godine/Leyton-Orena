@@ -33,7 +33,7 @@ const seed = [
     id: 'n-003',
     kind: 'record',
     title: "You're £2k from the monthly invoice record",
-    body: 'Helena Voss holds it at £102k. You can take it.',
+    body: 'Antonio De Grazia holds it at £102k. You can take it.',
     at: hoursAgo(3),
     read: false,
   },

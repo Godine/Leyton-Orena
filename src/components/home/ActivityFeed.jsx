@@ -14,19 +14,19 @@ const EVENT_KINDS = {
 }
 
 const EVENTS = [
-  { kind: 'badge',  who: 'Oumayma El Mahjoubi', text: 'unlocked 🏔️ Peak Month — best invoice month of her career.',         ago: '4m ago' },
+  { kind: 'badge',  who: 'Oumayma El Mahjoubi', text: 'unlocked 💰 Six-Figure Month — first £100k+ invoice month of the year.', ago: '4m ago' },
   { kind: 'record', who: 'Antonio De Grazia',   text: 'is closing in on Highest Quarterly Invoice — 92% there.',             ago: '18m ago' },
   { kind: 'rank',   who: 'David Buckley',       text: 'climbed two spots to #3 on the Technical leaderboard.',               ago: '32m ago' },
   { kind: 'streak', who: 'Israe Rouri',         text: 'just hit a 5-month delivery streak 🔥',                                ago: '1h ago' },
   { kind: 'streak', who: 'Scott Toner',         text: 'kept his daily fire going — 12 days advancing at least one claim.',    ago: '1h ago' },
   { kind: 'close',  who: 'Asad Shahid',         text: 'closed an Op in 1.8 days — fastest of the month.',                    ago: '2h ago' },
-  { kind: 'badge',  who: 'Lucas Rothwell',      text: 'earned 💎 Diamond Hands for 12 Ops in March.',                        ago: '3h ago' },
+  { kind: 'badge',  who: 'Lucas Rothwell',      text: 'earned 💸 Cash Closer for raising 70%+ of his invoice before day 15.', ago: '3h ago' },
   { kind: 'champ',  who: 'Antonio De Grazia',   text: 'is the current Arena Champion (Q1).',                                  ago: '5h ago' },
   { kind: 'rank',   who: 'Louie Heron',         text: 'overtook Safae El Kalai to break into the top 5 in Financial.',       ago: '7h ago' },
-  { kind: 'badge',  who: 'Ramin Yasseri',       text: 'unlocked 🛡️ Iron Wall — zero pushed Ops in March.',                   ago: '9h ago' },
+  { kind: 'badge',  who: 'Ramin Yasseri',       text: 'unlocked ✅ Clean Sheet — zero pushed Ops in March.',                  ago: '9h ago' },
   { kind: 'streak', who: 'Douae El Boukili',    text: 'extended her streak to 2 months in a row.',                            ago: '12h ago' },
   { kind: 'record', who: 'Lucas Rothwell',      text: 'set a new personal best for early-invoice % (94%).',                   ago: '1d ago' },
-  { kind: 'badge',  who: 'Mohammed Brija',      text: 'earned 🌅 Early Bird for raising day-2 invoices.',                     ago: '1d ago' },
+  { kind: 'badge',  who: 'Mohammed Brija',      text: 'earned 🌅 Early Bird for raising an invoice before day 5.',            ago: '1d ago' },
 ]
 
 export default function ActivityFeed() {
