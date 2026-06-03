@@ -143,7 +143,7 @@ export default function CommandPalette() {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[90] grid place-items-start pt-[12vh] md:pt-[18vh] px-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-[90] grid place-items-center p-4 bg-black/70 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

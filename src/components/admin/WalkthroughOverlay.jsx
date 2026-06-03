@@ -59,7 +59,7 @@ export default function WalkthroughOverlay() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-            className="w-full max-w-md bg-arena-surface border border-arena-border rounded-3xl p-6 relative"
+            className="w-full max-w-lg bg-arena-surface border border-arena-border rounded-3xl p-6 relative"
           >
             <button
               onClick={close}
@@ -77,7 +77,10 @@ export default function WalkthroughOverlay() {
             </h2>
             <p className="mt-2 text-arena-muted">{current.body}</p>
 
-            <div className="mt-5 grid grid-cols-6 gap-1.5">
+            <div
+              className="mt-5 grid gap-1.5"
+              style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
+            >
               {STEPS.map((_, i) => (
                 <span
                   key={i}
