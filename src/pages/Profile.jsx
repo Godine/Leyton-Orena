@@ -13,6 +13,8 @@ import NextBadges from '../components/profile/NextBadges.jsx'
 import ActivityHeatmap from '../components/profile/ActivityHeatmap.jsx'
 import CategoryProgress from '../components/profile/CategoryProgress.jsx'
 import FireStreak from '../components/shared/FireStreak.jsx'
+import LoadingBar from '../components/shared/LoadingBar.jsx'
+import useStaleWhileChanging from '../components/shared/useStaleWhileChanging.js'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 
 const JOIN_DATES = {
@@ -93,8 +95,13 @@ export default function Profile() {
     [],
   )
 
+  // Brief stale window when the active consultant changes — lets the loading
+  // bar flash so the user feels the page reflowing to new data.
+  const refreshing = useStaleWhileChanging(consultant.id, 240)
+
   return (
-    <div className="space-y-6 xl:space-y-8">
+    <div className="relative space-y-6 xl:space-y-8">
+      <LoadingBar active={refreshing} />
       <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">

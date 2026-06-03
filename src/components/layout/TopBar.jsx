@@ -5,6 +5,7 @@ import NotificationBell from '../notifications/NotificationBell.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import MobileMenu from './MobileMenu.jsx'
 import RewardsBalance from './RewardsBalance.jsx'
+import { CommandPaletteTrigger } from '../CommandPalette.jsx'
 
 // Quick-access actions that live next to the notification bell rather than in
 // the bottom tab bar (keeps the mobile tab bar lean).
@@ -21,6 +22,7 @@ export default function TopBar() {
 
       {/* Right-side actions */}
       <div className="flex items-center gap-2 ml-auto">
+        <CommandPaletteTrigger />
         {TOP_ACTIONS.map((action) => (
           <NavLink
             key={action.to}

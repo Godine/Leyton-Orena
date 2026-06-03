@@ -60,6 +60,15 @@ export const useArenaStore = create((set, get) => ({
   walkthroughOpen: false,
   setWalkthroughOpen: (v) => set({ walkthroughOpen: v }),
 
+  // First-run onboarding: tracks whether the user has seen the walkthrough,
+  // persisted in localStorage so we never auto-launch it twice.
+  seenOnboarding:
+    typeof window !== 'undefined' && localStorage.getItem('arena-seen-onboarding') === '1',
+  markOnboardingSeen: () => {
+    if (typeof window !== 'undefined') localStorage.setItem('arena-seen-onboarding', '1')
+    set({ seenOnboarding: true })
+  },
+
   // Teams webhook integration — purely client-side for MVP. When enabled we
   // POST a minimal payload to the configured URL; CORS-friendly mode is used
   // so the request goes out even from the browser.

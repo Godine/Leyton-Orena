@@ -6,6 +6,8 @@ import ErrorBoundary from './components/shared/ErrorBoundary.jsx'
 import { PageSkeleton } from './components/shared/SkeletonLoader.jsx'
 import DemoModeDriver from './components/admin/DemoModeDriver.jsx'
 import WalkthroughOverlay from './components/admin/WalkthroughOverlay.jsx'
+import WelcomeSplash from './components/WelcomeSplash.jsx'
+import CommandPalette from './components/CommandPalette.jsx'
 import { useArenaStore } from './store/useArenaStore.js'
 
 const Home         = lazy(() => import('./pages/Home.jsx'))
@@ -22,10 +24,24 @@ const Admin        = lazy(() => import('./pages/Admin.jsx'))
 export default function App() {
   const location = useLocation()
   const theme = useArenaStore((s) => s.theme)
+  const seenOnboarding = useArenaStore((s) => s.seenOnboarding)
+  const markOnboardingSeen = useArenaStore((s) => s.markOnboardingSeen)
+  const setWalkthroughOpen = useArenaStore((s) => s.setWalkthroughOpen)
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+
+  // First-run onboarding: auto-launch the walkthrough exactly once. Delayed
+  // until after the welcome splash fades out so the two don't compete.
+  useEffect(() => {
+    if (seenOnboarding) return
+    const t = setTimeout(() => {
+      setWalkthroughOpen(true)
+      markOnboardingSeen()
+    }, 2400)
+    return () => clearTimeout(t)
+  }, [seenOnboarding, markOnboardingSeen, setWalkthroughOpen])
 
   return (
     <AppShell>
@@ -57,6 +73,8 @@ export default function App() {
       </ErrorBoundary>
       <DemoModeDriver />
       <WalkthroughOverlay />
+      <WelcomeSplash />
+      <CommandPalette />
     </AppShell>
   )
 }
