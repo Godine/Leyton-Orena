@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Check, Lock } from 'lucide-react'
 import UnlockAnimation from './UnlockAnimation.jsx'
 import { RARITY_STYLES } from '../../data/badges.js'
+import { useSoundStore } from '../../store/useSoundStore.js'
 
 const RARITY_GLOW = {
   common:    '0 0 0 1px rgba(142,142,160,0.25)',
@@ -39,14 +40,16 @@ export default function BadgeCard({
   // grey/locked look for 0.5s, then "burst" into full colour.
   const [revealed, setRevealed] = useState(!playUnlock)
 
+  const playSound = useSoundStore((s) => s.play)
   useEffect(() => {
     if (!playUnlock) return
     const t = setTimeout(() => {
       setRevealed(true)
       onUnlockSeen?.()
+      playSound('unlock')
     }, 500)
     return () => clearTimeout(t)
-  }, [playUnlock, onUnlockSeen])
+  }, [playUnlock, onUnlockSeen, playSound])
 
   const showAsEarned = earned && revealed
   const showAsLocked = !showAsEarned

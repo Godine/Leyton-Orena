@@ -1,0 +1,16 @@
+{
+  "name": "Leyton Arena",
+  "short_name": "Arena",
+  "description": "Gamified leaderboard for R&D tax consultants — streaks, badges, duels, and rewards.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#F75C03",
+  "background_color": "#1a1a2e",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any",     "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/logo.svg", "sizes": "any",     "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "categories": ["business", "productivity"]
+}

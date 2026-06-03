@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Settings, RotateCcw, Sparkles, PlayCircle, Compass, MessageSquare, Target } from 'lucide-react'
+import { Settings, RotateCcw, Sparkles, PlayCircle, Compass, MessageSquare, Target, Volume2, Trash2 } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { useNotificationStore } from '../store/useNotificationStore.js'
 import { useChallengeStore } from '../store/useChallengeStore.js'
+import { useRewardStore } from '../store/useRewardStore.js'
+import { useSoundStore } from '../store/useSoundStore.js'
 import { formatCurrencyCompact } from '../utils/formatters.js'
 
 export default function Admin() {
@@ -23,6 +25,29 @@ export default function Admin() {
   const setTeamsWebhook = useArenaStore((s) => s.setTeamsWebhook)
   const broadcastToTeams = useArenaStore((s) => s.broadcastToTeams)
   const setConsultantTargets = useArenaStore((s) => s.setConsultantTargets)
+
+  const soundEnabled = useSoundStore((s) => s.enabled)
+  const setSoundEnabled = useSoundStore((s) => s.setEnabled)
+  const playSound = useSoundStore((s) => s.play)
+
+  const resetDemo = () => {
+    if (typeof window !== 'undefined') {
+      ;['arena-seen-onboarding', 'arena-splash-shown', 'arena-sound']
+        .forEach((k) => { try { localStorage.removeItem(k); sessionStorage.removeItem(k) } catch {} })
+    }
+    // Reset stores in place — quickest way to a "fresh slate" without a reload.
+    useArenaStore.setState({
+      seenOnboarding: false,
+      demoMode: false,
+      walkthroughOpen: false,
+      seenUnlocks: {},
+      currentUserId: 'c-01',
+    })
+    useRewardStore.setState({ redemptions: [] })
+    useSoundStore.setState({ enabled: false })
+    // Hard refresh so the splash + walkthrough re-fire cleanly.
+    setTimeout(() => window.location.reload(), 120)
+  }
 
   const latestMonth = useMemo(() => [...months].sort().at(-1), [months])
   const [editMonth, setEditMonth] = useState(latestMonth)
@@ -98,6 +123,43 @@ export default function Admin() {
             className="text-xs font-display font-bold px-3 py-1.5 rounded-full bg-accent-amber/15 text-accent-amber ring-1 ring-inset ring-accent-amber/40"
           >
             Reset
+          </button>
+        </ActionTile>
+
+        <ActionTile
+          icon={Volume2}
+          title="Sound effects"
+          body={soundEnabled ? 'On — unlocks and wins play a short tone.' : 'Off — silent operation.'}
+          accent={soundEnabled ? '#1cb0f6' : '#a0a0c0'}
+        >
+          <div className="flex items-center gap-2">
+            <Toggle
+              value={soundEnabled}
+              onChange={(v) => { setSoundEnabled(v); if (v) playSound('pop') }}
+              label={soundEnabled ? 'On' : 'Off'}
+            />
+            {soundEnabled && (
+              <button
+                onClick={() => playSound('win')}
+                className="text-[10px] font-display font-bold px-2.5 py-1 rounded-full bg-accent-blue/15 text-accent-blue ring-1 ring-inset ring-accent-blue/40"
+              >
+                Test
+              </button>
+            )}
+          </div>
+        </ActionTile>
+
+        <ActionTile
+          icon={Trash2}
+          title="Reset demo"
+          body="Wipe onboarding, splash, redemptions, demo mode and seen-unlocks. Page will reload."
+          accent="#ff4b4b"
+        >
+          <button
+            onClick={resetDemo}
+            className="text-xs font-display font-bold px-3 py-1.5 rounded-full bg-accent-coral/15 text-accent-coral ring-1 ring-inset ring-accent-coral/40"
+          >
+            Fresh slate
           </button>
         </ActionTile>
       </section>

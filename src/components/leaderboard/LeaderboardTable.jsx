@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Award } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useArenaStore } from '../../store/useArenaStore.js'
 import LocationPill from '../shared/LocationPill.jsx'
 import TrendArrow from '../shared/TrendArrow.jsx'
 import { formatCurrencyCompact } from '../../utils/formatters.js'
@@ -18,6 +20,10 @@ function secondaryFor(sortKey) {
 }
 
 export default function LeaderboardTable({ rows, sortKey, currentUserId }) {
+  const navigate = useNavigate()
+  const setCurrentUserId = useArenaStore((s) => s.setCurrentUserId)
+  const openProfile = (id) => { setCurrentUserId(id); navigate('/profile') }
+
   if (rows.length === 0) {
     return (
       <div className="arena-card text-center text-arena-muted py-12">
@@ -53,9 +59,19 @@ export default function LeaderboardTable({ rows, sortKey, currentUserId }) {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 28 }}
                 whileHover={{ scale: 1.005 }}
+                onClick={() => openProfile(row.consultant.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openProfile(row.consultant.id)
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Open ${row.consultant.name}'s profile`}
                 className={[
                   'grid grid-cols-[40px_1fr_auto] md:grid-cols-[60px_1.4fr_80px_1fr_1fr_70px_60px]',
-                  'gap-3 items-center px-5 py-3 cursor-default',
+                  'gap-3 items-center px-5 py-3 cursor-pointer',
                   'transition-colors',
                   isMe
                     ? 'bg-accent-green/10 ring-1 ring-inset ring-accent-green/40 shadow-[inset_0_0_24px_rgba(247, 92, 3,0.18)]'

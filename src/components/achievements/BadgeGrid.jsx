@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import BadgeCard from './BadgeCard.jsx'
+import EmptyState from '../shared/EmptyState.jsx'
 
 export default function BadgeGrid({
   badges,
@@ -11,9 +12,11 @@ export default function BadgeGrid({
 }) {
   if (!badges.length) {
     return (
-      <div className="arena-card text-center text-arena-muted py-12">
-        No badges match the current filters.
-      </div>
+      <EmptyState
+        art="badges"
+        title="No badges in this category yet"
+        body="Try widening the filters above — there's probably a tier close to unlock."
+      />
     )
   }
   return (

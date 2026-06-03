@@ -6,6 +6,7 @@ import { closestToUnlock } from '../utils/badgeEligibility.js'
 import BadgeGrid from '../components/achievements/BadgeGrid.jsx'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 import ProgressSummary from '../components/achievements/ProgressSummary.jsx'
+import EmptyState from '../components/shared/EmptyState.jsx'
 
 const RARITY_HEX = {
   common: '#8e8ea0', rare: '#1cb0f6', epic: '#ce82ff', legendary: '#ffc800', mythic: '#2DD4BF',
@@ -93,9 +94,13 @@ export default function Achievements() {
       />
 
       {filteredCategories.length === 0 ? (
-        <div className="arena-card text-center text-arena-muted py-12">
-          No badges match the current filters.
-        </div>
+        <EmptyState
+          art="badges"
+          title="No badges match those filters"
+          body="Try widening the rarity filter or turn off Show earned only — there's probably a badge nearby that fits."
+          ctaLabel="Show all badges"
+          ctaOnClick={() => { setRarityFilter('all'); setEarnedOnly(false) }}
+        />
       ) : (
         <div className="space-y-8 xl:space-y-10">
           {filteredCategories.map((cat) => (

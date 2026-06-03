@@ -7,6 +7,8 @@ import {
 } from '../store/useRewardStore.js'
 import { useNotificationStore } from '../store/useNotificationStore.js'
 import AnimatedCounter from '../components/shared/AnimatedCounter.jsx'
+import EmptyState from '../components/shared/EmptyState.jsx'
+import { useSoundStore } from '../store/useSoundStore.js'
 
 function timeAgo(ts) {
   const diff = Math.max(0, Date.now() - ts)
@@ -27,6 +29,7 @@ export default function Rewards() {
   const redemptions = useRewardStore((s) => s.redemptions)
   const redeem = useRewardStore((s) => s.redeem)
   const addNotification = useNotificationStore((s) => s.addNotification)
+  const playSound = useSoundStore((s) => s.play)
 
   const balance = useMemo(() => {
     const earned = pointsForBadges(currentUser?.badges)
@@ -57,6 +60,7 @@ export default function Rewards() {
         title: `Redeemed · ${pending.icon} ${pending.name}`,
         body: `${pending.cost} pt deducted. Treat yourself.`,
       })
+      playSound('win')
       setJustRedeemed(pending.id)
       setTimeout(() => setJustRedeemed(null), 1500)
     }
@@ -198,9 +202,11 @@ export default function Rewards() {
           <span className="text-xs text-arena-muted">{history.length}</span>
         </header>
         {history.length === 0 ? (
-          <div className="arena-card p-6 text-center text-sm text-arena-muted">
-            You haven't cashed in yet. Treat yourself.
-          </div>
+          <EmptyState
+            art="gift"
+            title="No redemptions yet"
+            body="You've banked points — pick something from the catalogue above and treat yourself."
+          />
         ) : (
           <ul className="arena-card p-0 divide-y divide-arena-border">
             {history.map((h) => {

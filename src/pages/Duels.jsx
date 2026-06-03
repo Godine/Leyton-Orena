@@ -10,6 +10,8 @@ import {
 } from '../store/useDuelStore.js'
 import { formatCurrencyCompact } from '../utils/formatters.js'
 import LocationPill from '../components/shared/LocationPill.jsx'
+import EmptyState from '../components/shared/EmptyState.jsx'
+import { useSoundStore } from '../store/useSoundStore.js'
 
 function formatValue(metric, v) {
   if (metric === 'invoiceValue')          return formatCurrencyCompact(v)
@@ -50,6 +52,7 @@ export default function Duels() {
   const conclude = useDuelStore((s) => s.conclude)
   const cancel = useDuelStore((s) => s.cancel)
   const cheer = useDuelStore((s) => s.cheer)
+  const playSound = useSoundStore((s) => s.play)
 
   const byId = useMemo(() => Object.fromEntries(consultants.map((c) => [c.id, c])), [consultants])
   const mine = allDuels.filter((d) =>
@@ -111,14 +114,21 @@ export default function Duels() {
           consultants={consultants}
           months={months}
           currentUser={currentUser}
-          onConclude={(d, winnerId, scores) => conclude(d.id, winnerId, scores)}
+          onConclude={(d, winnerId, scores) => {
+            conclude(d.id, winnerId, scores)
+            playSound(winnerId === currentUser.id ? 'win' : 'milestone')
+          }}
           onCancel={(d) => { cancel(d.id); setSelectedId(null) }}
           onCheer={(d, side) => cheer(d.id, currentUser.id, side)}
         />
       ) : (
-        <div className="arena-card text-center text-sm text-arena-muted py-12">
-          No duels yet. Throw down a gauntlet.
-        </div>
+        <EmptyState
+          art="swords"
+          title="No duels yet"
+          body="Pick a peer, pick a metric, pick a stake. The Arena keeps score."
+          ctaLabel="Challenge a peer"
+          ctaOnClick={() => setCreating(true)}
+        />
       )}
 
       {/* History */}
