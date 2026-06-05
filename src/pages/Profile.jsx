@@ -12,6 +12,7 @@ import PersonalRecords from '../components/profile/PersonalRecords.jsx'
 import NextBadges from '../components/profile/NextBadges.jsx'
 import ActivityHeatmap from '../components/profile/ActivityHeatmap.jsx'
 import CategoryProgress from '../components/profile/CategoryProgress.jsx'
+import InsightsCard from '../components/profile/InsightsCard.jsx'
 import FireStreak from '../components/shared/FireStreak.jsx'
 import LoadingBar from '../components/shared/LoadingBar.jsx'
 import useStaleWhileChanging from '../components/shared/useStaleWhileChanging.js'
@@ -144,6 +145,7 @@ export default function Profile() {
             todayIso={consultant.fire?.todayIso}
           />
           <RankSummary rank={rank} total={total} delta={deltaPositions} role={consultant.role} />
+          <InsightsCard consultant={consultant} allConsultants={consultants} months={months} />
           <CategoryProgress earnedIds={consultant.badges ?? []} />
         </div>
         <div className="space-y-4">

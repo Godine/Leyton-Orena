@@ -1,8 +1,9 @@
-import { Home, Trophy, Award, Medal, Gift, Sparkles, Swords, GitCompare, User, Gauge, Settings } from 'lucide-react'
+import { Home, Trophy, Award, Medal, Gift, Sparkles, Swords, GitCompare, ShieldHalf, User, Gauge, Settings } from 'lucide-react'
 
 export const NAV_ITEMS = [
   { to: '/',             label: 'Home',         icon: Home },
   { to: '/leaderboard',  label: 'Leaderboard',  icon: Trophy },
+  { to: '/seasons',      label: 'Seasons',      icon: ShieldHalf },
   { to: '/achievements', label: 'Achievements', icon: Award },
   { to: '/records',      label: 'Records',      icon: Medal },
   { to: '/duels',        label: 'Duels',        icon: Swords },

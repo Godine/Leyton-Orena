@@ -20,6 +20,7 @@ const Rewards      = lazy(() => import('./pages/Rewards.jsx'))
 const Wrapped      = lazy(() => import('./pages/Wrapped.jsx'))
 const Duels        = lazy(() => import('./pages/Duels.jsx'))
 const Compare      = lazy(() => import('./pages/Compare.jsx'))
+const Seasons      = lazy(() => import('./pages/Seasons.jsx'))
 const Admin        = lazy(() => import('./pages/Admin.jsx'))
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
                 <Route path="/wrapped"      element={<Wrapped />} />
                 <Route path="/duels"        element={<Duels />} />
                 <Route path="/compare"      element={<Compare />} />
+                <Route path="/seasons"      element={<Seasons />} />
                 <Route path="/admin"        element={<Admin />} />
               </Routes>
             </Suspense>
