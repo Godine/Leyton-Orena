@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
-import { NAV_ITEMS } from './navConfig.js'
+import { Menu, X, ChevronDown } from 'lucide-react'
+import { NAV_GROUPS } from './navConfig.js'
 import RoleSwitcher from './RoleSwitcher.jsx'
 import Logo from '../Logo.jsx'
 
@@ -91,44 +91,9 @@ export default function MobileMenu() {
                 </button>
               </div>
 
-              {/* Nav list */}
-              <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-                {NAV_ITEMS.map((item, i) => (
-                  <motion.div
-                    key={item.to}
-                    initial={{ x: -16, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.03 * i, type: 'spring', stiffness: 320, damping: 26 }}
-                  >
-                    <NavLink
-                      to={item.to}
-                      end={item.to === '/'}
-                      className={({ isActive }) =>
-                        [
-                          'flex items-center gap-3 px-4 py-3 rounded-xl font-display font-bold text-sm transition-colors',
-                          isActive
-                            ? 'bg-accent-green/15 text-accent-green'
-                            : 'text-arena-ink/80 hover:text-arena-ink hover:bg-arena-surface2',
-                        ].join(' ')
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <item.icon
-                            size={20}
-                            strokeWidth={2.4}
-                            className={isActive ? 'text-accent-green' : 'text-arena-muted'}
-                          />
-                          <span>{item.label}</span>
-                          {isActive && (
-                            <span className="ml-auto h-2 w-2 rounded-full bg-accent-green shadow-glow" />
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  </motion.div>
-                ))}
-              </nav>
+              {/* Nav list, grouped */}
+              <MobileNavList />
+
 
               {/* Role switcher pinned to the bottom */}
               <div className="p-4 border-t border-arena-border">
@@ -139,5 +104,98 @@ export default function MobileMenu() {
         )}
       </AnimatePresence>
     </>
+  )
+}
+
+function MobileNavList() {
+  const location = useLocation()
+  const [open, setOpen] = useState(() => {
+    // Auto-open whichever labelled group contains the current path; everything else collapsed.
+    const init = {}
+    NAV_GROUPS.forEach((g) => {
+      if (g.id && g.items.some((it) => it.to === location.pathname)) init[g.id] = true
+    })
+    return init
+  })
+  const toggle = (id) => setOpen((o) => ({ ...o, [id]: !o[id] }))
+
+  return (
+    <nav className="flex-1 overflow-y-auto px-3 py-4">
+      {NAV_GROUPS.map((group, gi) => {
+        if (!group.label) {
+          return (
+            <div key={`g-${gi}`} className="space-y-1 mb-1">
+              {group.items.map((item) => <MobileNavItem key={item.to} item={item} />)}
+            </div>
+          )
+        }
+        const isOpen = !!open[group.id]
+        const groupActive = group.items.some((it) => it.to === location.pathname)
+        return (
+          <div key={group.id} className="mt-2">
+            <button
+              onClick={() => toggle(group.id)}
+              className="w-full flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold hover:text-arena-ink"
+            >
+              <span>{group.label}</span>
+              {groupActive && !isOpen && (
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-green shadow-glow" />
+              )}
+              <ChevronDown
+                size={12}
+                strokeWidth={3}
+                className={['ml-auto transition-transform', isOpen ? 'rotate-0' : '-rotate-90'].join(' ')}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-1 pt-1 pb-2">
+                    {group.items.map((item) => <MobileNavItem key={item.to} item={item} />)}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )
+      })}
+    </nav>
+  )
+}
+
+function MobileNavItem({ item }) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      className={({ isActive }) =>
+        [
+          'flex items-center gap-3 px-4 py-2.5 rounded-xl font-display font-bold text-sm transition-colors',
+          isActive
+            ? 'bg-accent-green/15 text-accent-green'
+            : 'text-arena-ink/80 hover:text-arena-ink hover:bg-arena-surface2',
+        ].join(' ')
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <item.icon
+            size={20}
+            strokeWidth={2.4}
+            className={isActive ? 'text-accent-green' : 'text-arena-muted'}
+          />
+          <span>{item.label}</span>
+          {isActive && (
+            <span className="ml-auto h-2 w-2 rounded-full bg-accent-green shadow-glow" />
+          )}
+        </>
+      )}
+    </NavLink>
   )
 }
