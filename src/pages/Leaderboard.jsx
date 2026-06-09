@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Trophy, ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trophy, ChevronDown, Table2, Flag } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import {
   buildLeaderboard,
+  buildPriorRanks,
   teamTotals,
   SORT_OPTIONS,
   PERIODS,
@@ -12,6 +13,8 @@ import {
 import Podium from '../components/leaderboard/Podium.jsx'
 import MetricCards from '../components/leaderboard/MetricCards.jsx'
 import LeaderboardTable from '../components/leaderboard/LeaderboardTable.jsx'
+import RaceTrack from '../components/leaderboard/RaceTrack.jsx'
+import YourPositionCard from '../components/leaderboard/YourPositionCard.jsx'
 
 export default function Leaderboard() {
   const consultants = useArenaStore((s) => s.consultants)
@@ -22,14 +25,24 @@ export default function Leaderboard() {
   const [periodKey, setPeriodKey] = useState('month')
   const [sortKey, setSortKey] = useState('invoiceValue')
   const [location, setLocation] = useState('All')
+  const [view, setView] = useState('table') // 'table' | 'race'
 
   const rows = useMemo(
     () => buildLeaderboard({ consultants, months, role, location, periodKey, sortKey }),
     [consultants, months, role, location, periodKey, sortKey],
   )
 
+  const priorRanks = useMemo(
+    () => buildPriorRanks({ consultants, months, role, location, periodKey, sortKey }),
+    [consultants, months, role, location, periodKey, sortKey],
+  )
+
   const totals = useMemo(() => teamTotals(rows), [rows])
   const periodLabel = PERIODS.find((p) => p.key === periodKey)?.label ?? ''
+
+  // Position delta of the current user, used by YourPositionCard.
+  const myRow = rows.find((r) => r.consultant.id === currentUserId)
+  const myDelta = myRow && priorRanks[currentUserId] ? priorRanks[currentUserId] - myRow.rank : 0
 
   return (
     <div className="space-y-8 xl:space-y-10">
@@ -44,10 +57,20 @@ export default function Leaderboard() {
           <span className="text-arena-amber">Leaderboard</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">
-          Who's hot, who's climbing, who's slipping. Filter by period, location, or metric.
+          Who's hot, who's climbing, who's slipping. Filter by period, location, or metric. Click any row to jump to their profile.
         </p>
       </header>
 
+      {/* Always-visible "Your position" card */}
+      <YourPositionCard
+        rows={rows}
+        currentUserId={currentUserId}
+        sortKey={sortKey}
+        positionChange={myDelta}
+        totalInRole={rows.length}
+      />
+
+      {/* Compact filter bar with view toggle */}
       <FilterBar
         periodKey={periodKey}
         onPeriod={setPeriodKey}
@@ -55,6 +78,8 @@ export default function Leaderboard() {
         onSort={setSortKey}
         location={location}
         onLocation={setLocation}
+        view={view}
+        onView={setView}
       />
 
       <motion.section
@@ -63,29 +88,60 @@ export default function Leaderboard() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
       >
-        <Podium rows={rows.slice(0, 3)} sortKey={sortKey} />
+        <Podium rows={rows.slice(0, 3)} sortKey={sortKey} priorRanks={priorRanks} />
       </motion.section>
 
       <MetricCards totals={totals} periodLabel={periodLabel} />
 
       <section>
         <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="font-display font-black text-arena-ink text-lg">Rankings</h2>
+          <h2 className="font-display font-black text-arena-ink text-lg">
+            {view === 'race' ? 'Race track' : 'Rankings'}
+          </h2>
           <span className="text-xs text-arena-muted">
             {rows.length} {role.toLowerCase()} consultant{rows.length === 1 ? '' : 's'}
           </span>
         </div>
-        <LeaderboardTable
-          rows={rows.slice(3)}
-          sortKey={sortKey}
-          currentUserId={currentUserId}
-        />
+        <AnimatePresence mode="wait">
+          {view === 'race' ? (
+            <motion.div
+              key="race"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              <RaceTrack
+                rows={rows}
+                sortKey={sortKey}
+                currentUserId={currentUserId}
+                priorRanks={priorRanks}
+                topN={12}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="table"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              <LeaderboardTable
+                rows={rows.slice(3)}
+                sortKey={sortKey}
+                currentUserId={currentUserId}
+                priorRanks={priorRanks}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
     </div>
   )
 }
 
-function FilterBar({ periodKey, onPeriod, sortKey, onSort, location, onLocation }) {
+function FilterBar({ periodKey, onPeriod, sortKey, onSort, location, onLocation, view, onView }) {
   return (
     <div className="arena-card p-3 md:p-4 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
       <SegmentedControl
@@ -94,12 +150,39 @@ function FilterBar({ periodKey, onPeriod, sortKey, onSort, location, onLocation 
         value={periodKey}
         onChange={onPeriod}
       />
-
+      <ViewToggle value={view} onChange={onView} />
       <div className="flex-1" />
-
       <SortDropdown value={sortKey} onChange={onSort} />
-
       <LocationPills value={location} onChange={onLocation} />
+    </div>
+  )
+}
+
+function ViewToggle({ value, onChange }) {
+  return (
+    <div className="inline-flex bg-arena-bg/70 border border-arena-border rounded-full p-1 text-xs font-display font-bold">
+      <button
+        onClick={() => onChange('table')}
+        title="Table view"
+        className={[
+          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors',
+          value === 'table' ? 'bg-accent-amber text-arena-bg shadow-glow-amber' : 'text-arena-muted hover:text-arena-ink',
+        ].join(' ')}
+      >
+        <Table2 size={12} strokeWidth={2.6} />
+        Table
+      </button>
+      <button
+        onClick={() => onChange('race')}
+        title="Race view"
+        className={[
+          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors',
+          value === 'race' ? 'bg-accent-amber text-arena-bg shadow-glow-amber' : 'text-arena-muted hover:text-arena-ink',
+        ].join(' ')}
+      >
+        <Flag size={12} strokeWidth={2.6} />
+        Race
+      </button>
     </div>
   )
 }

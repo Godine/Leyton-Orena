@@ -114,6 +114,22 @@ export function teamTotals(rows) {
   return { opsDelivered: ops, invoiceValue: inv, invoiceBeforeDay15Pct: front, avgDaysToClose: close }
 }
 
+// Returns { [consultantId]: priorRank } for the previous comparable window.
+// Used to compute position-change deltas (▲ / ▼).
+export function buildPriorRanks({ consultants, months, role, location, periodKey, sortKey }) {
+  const sorted = [...months].sort()
+  const prev = getPrevPeriodMonths(sorted, periodKey)
+  if (!prev.length) return {}
+  const pool = consultants.filter(
+    (c) => c.role === role && (location === 'All' || c.location === location),
+  )
+  const rows = pool.map((c) => ({ id: c.id, v: aggregate(c, prev)[sortKey] ?? 0 }))
+  const cfg = SORT_OPTIONS.find((s) => s.key === sortKey) ?? SORT_OPTIONS[0]
+  const dir = cfg.direction === 'asc' ? 1 : -1
+  rows.sort((a, b) => dir * (a.v - b.v))
+  return Object.fromEntries(rows.map((r, i) => [r.id, i + 1]))
+}
+
 export function formatMetric(value, metricKey) {
   switch (metricKey) {
     case 'invoiceValue':          return value
