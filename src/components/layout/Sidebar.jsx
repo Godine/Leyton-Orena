@@ -45,7 +45,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-arena-surface border-r border-arena-border z-20">
+    <aside data-tour="sidebar" className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-arena-surface border-r border-arena-border z-20">
       <div className="px-6 pt-7 pb-5">
         <Wordmark />
       </div>

@@ -12,6 +12,7 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={toggle}
+        data-tour="bell"
         className="relative h-10 w-10 grid place-items-center rounded-full bg-arena-surface border border-arena-border hover:border-accent-green/50 transition-colors"
         aria-label="Notifications"
       >

@@ -8,7 +8,7 @@ export default function RoleSwitcher() {
   const setRole = useArenaStore((s) => s.setRoleView)
 
   return (
-    <div>
+    <div data-tour="role">
       <div className="text-[10px] uppercase tracking-[0.2em] text-arena-muted mb-2 px-1">
         View as
       </div>

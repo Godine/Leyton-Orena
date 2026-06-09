@@ -299,6 +299,7 @@ export function CommandPaletteTrigger() {
       onClick={open}
       title="Search (⌘K)"
       aria-label="Open command palette"
+      data-tour="cmdk"
       className="hidden md:inline-flex items-center gap-2 h-10 px-3 rounded-full bg-arena-surface border border-arena-border hover:border-accent-green/50 transition-colors text-xs font-display font-bold text-arena-muted"
     >
       <Search size={14} strokeWidth={2.4} />

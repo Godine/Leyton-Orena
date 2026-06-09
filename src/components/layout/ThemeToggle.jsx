@@ -11,6 +11,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
+      data-tour="theme"
       aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
       title={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
       className="relative h-10 w-10 grid place-items-center rounded-full bg-arena-surface border border-arena-border hover:border-accent-amber/60 transition-colors overflow-hidden"

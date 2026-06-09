@@ -23,6 +23,7 @@ export default function RewardsBalance() {
   return (
     <Link
       to="/rewards"
+      data-tour="rewards"
       title={`${balance.toLocaleString('en-GB')} Arena points · cash in for rewards`}
       aria-label={`${balance} Arena points`}
       className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-arena-surface border border-arena-border hover:border-accent-amber/60 transition-colors"
