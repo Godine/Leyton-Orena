@@ -212,7 +212,7 @@ function Hero() {
           className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-display font-bold uppercase tracking-[0.18em]"
           style={{ color: C.muted }}
         >
-          <span className="inline-flex items-center gap-1.5"><Users size={12} /> 25 consultants</span>
+          <span className="inline-flex items-center gap-1.5"><Users size={12} /> 100+ consultants</span>
           <span>·</span>
           <span className="inline-flex items-center gap-1.5"><Award size={12} /> 40+ badges</span>
           <span>·</span>
@@ -371,7 +371,7 @@ function PodiumBar({ height, color, label, crown }) {
 // 1) Flatten the curve — interactive before/after
 // ─────────────────────────────────────────────────────────────────────────────
 function FlattenSection() {
-  const [withArena, setWithArena] = useState(true)
+  const [withArena, setWithArena] = useState(false)
   const days = 30
   // Without Arena: traditional crunch — flat-ish then huge spike at the end.
   const without = Array.from({ length: days }, (_, i) => {
@@ -1270,8 +1270,8 @@ function Stats() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, amount: 0.4 })
   const stats = [
-    { v: 25,  label: 'Consultants' },
-    { v: 12,  label: 'Pages' },
+    { v: 100, label: 'Consultants' },
+    { v: 10,  label: 'Challenge categories' },
     { v: 40,  label: 'Badges' },
     { v: 34,  label: 'Rewards' },
   ]
