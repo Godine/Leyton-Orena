@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { NAV_GROUPS } from './navConfig.js'
 import RoleSwitcher from './RoleSwitcher.jsx'
 import Logo from '../Logo.jsx'
+import { useArenaStore } from '../../store/useArenaStore.js'
 
 const STORAGE_KEY = 'arena-nav-open-groups'
 
@@ -98,8 +100,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-arena-border">
+      <div className="p-4 border-t border-arena-border space-y-3">
         <RoleSwitcher />
+        <LogoutButton />
       </div>
     </aside>
   )
@@ -139,6 +142,19 @@ function NavItem({ item }) {
         </>
       )}
     </NavLink>
+  )
+}
+
+function LogoutButton() {
+  const logout = useArenaStore((s) => s.logout)
+  return (
+    <button
+      onClick={logout}
+      className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-arena-bg/60 border border-arena-border text-xs font-display font-bold text-arena-muted hover:text-arena-ink hover:border-accent-coral/40 transition-colors"
+    >
+      <LogOut size={13} strokeWidth={2.6} />
+      Log out
+    </button>
   )
 }
 

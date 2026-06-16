@@ -60,6 +60,23 @@ export const useArenaStore = create((set, get) => ({
   walkthroughOpen: false,
   setWalkthroughOpen: (v) => set({ walkthroughOpen: v }),
 
+  // Mock auth — purely client-side. The landing page sends users to /login,
+  // which flips this flag and stashes it in localStorage. AuthGuard reads it
+  // to gate /app/*.
+  isAuthed:
+    typeof window !== 'undefined' && localStorage.getItem('arena-authed') === '1',
+  login: (consultantId) => {
+    if (typeof window !== 'undefined') localStorage.setItem('arena-authed', '1')
+    set((s) => ({ isAuthed: true, currentUserId: consultantId || s.currentUserId }))
+  },
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('arena-authed')
+      localStorage.removeItem('arena-seen-onboarding')
+    }
+    set({ isAuthed: false, seenOnboarding: false })
+  },
+
   // First-run onboarding: tracks whether the user has seen the walkthrough,
   // persisted in localStorage so we never auto-launch it twice.
   seenOnboarding:
