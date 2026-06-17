@@ -10,27 +10,11 @@ import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3 } from 'lucide-react
 export const NAV_GROUPS = [
   {
     items: [
-      { to: '/', label: 'Home', icon: Home },
-    ],
-  },
-  {
-    id: 'leaderboard',
-    label: 'Leaderboard',
-    items: [
+      { to: '/',             label: 'Home',         icon: Home },
       { to: '/seasons',      label: 'Leaderboard',  icon: Trophy },
       { to: '/achievements', label: 'Achievements', icon: Award },
       { to: '/records',      label: 'Records',      icon: Medal },
-    ],
-  },
-  {
-    items: [
       { to: '/rewards',      label: 'Rewards',      icon: Gift },
-    ],
-  },
-  {
-    id: 'manager',
-    label: 'Manager',
-    items: [
       { to: '/manager',      label: 'Manager',      icon: Gauge },
       { to: '/leaderboard',  label: 'Rankings',     icon: BarChart3 },
     ],

@@ -28,7 +28,7 @@ export default function Login() {
   useEffect(() => {
     const prev = document.documentElement.dataset.theme
     document.documentElement.dataset.theme = 'dark'
-    return () => { document.documentElement.dataset.theme = prev || 'dark' }
+    return () => { document.documentElement.dataset.theme = prev || 'light' }
   }, [])
 
   function submit(e) {

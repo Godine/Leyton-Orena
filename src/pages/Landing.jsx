@@ -1414,7 +1414,7 @@ export default function Landing() {
   useEffect(() => {
     const prev = document.documentElement.dataset.theme
     document.documentElement.dataset.theme = 'light'
-    return () => { document.documentElement.dataset.theme = prev || 'dark' }
+    return () => { document.documentElement.dataset.theme = prev || 'light' }
   }, [])
 
   return (

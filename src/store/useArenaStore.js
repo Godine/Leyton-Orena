@@ -41,8 +41,8 @@ export const useArenaStore = create((set, get) => ({
       ),
     })),
 
-  // theme — dark by default, persisted to localStorage
-  theme: (typeof window !== 'undefined' && localStorage.getItem('arena-theme')) || 'dark',
+  // theme — light by default, persisted to localStorage
+  theme: (typeof window !== 'undefined' && localStorage.getItem('arena-theme')) || 'light',
   setTheme: (t) => {
     if (typeof window !== 'undefined') localStorage.setItem('arena-theme', t)
     set({ theme: t })
