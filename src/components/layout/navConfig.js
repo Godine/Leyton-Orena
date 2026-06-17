@@ -1,8 +1,12 @@
-import { Home, Trophy, Award, Medal, Gift, Sparkles, Swords, GitCompare, ShieldHalf, User, Gauge, Settings } from 'lucide-react'
+import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3 } from 'lucide-react'
 
-// Grouped navigation. Groups without a `label` render their items flat (no
-// header, no collapse) — used for the always-visible Home and Profile items.
-// Groups with a label render as a collapsible section.
+// Grouped navigation. Groups without a `label` render flat (no header, no
+// collapse). Labelled groups render as collapsible sections.
+//
+// Profile, Admin, Duels, Compare and Wrapped are intentionally NOT in the
+// sidebar — Profile & Admin live in the top-right of the TopBar; Wrapped,
+// Duels and Compare are reached from inside Profile (Quick actions) or via
+// the ⌘K command palette.
 export const NAV_GROUPS = [
   {
     items: [
@@ -10,40 +14,43 @@ export const NAV_GROUPS = [
     ],
   },
   {
-    id: 'compete',
-    label: 'Compete',
+    id: 'leaderboard',
+    label: 'Leaderboard',
     items: [
-      { to: '/leaderboard',  label: 'Leaderboard',  icon: Trophy },
-      { to: '/seasons',      label: 'Seasons',      icon: ShieldHalf },
-      { to: '/duels',        label: 'Duels',        icon: Swords },
-      { to: '/compare',      label: 'Compare',      icon: GitCompare },
-    ],
-  },
-  {
-    id: 'achieve',
-    label: 'Achieve',
-    items: [
+      { to: '/seasons',      label: 'Leaderboard',  icon: Trophy },
       { to: '/achievements', label: 'Achievements', icon: Award },
       { to: '/records',      label: 'Records',      icon: Medal },
-      { to: '/rewards',      label: 'Rewards',      icon: Gift },
-      { to: '/wrapped',      label: 'Wrapped',      icon: Sparkles },
     ],
   },
   {
     items: [
-      { to: '/profile',      label: 'My Profile',   icon: User },
+      { to: '/rewards',      label: 'Rewards',      icon: Gift },
     ],
   },
   {
-    id: 'leadership',
-    label: 'Leadership',
+    id: 'manager',
+    label: 'Manager',
     items: [
       { to: '/manager',      label: 'Manager',      icon: Gauge },
-      { to: '/admin',        label: 'Admin',        icon: Settings },
+      { to: '/leaderboard',  label: 'Rankings',     icon: BarChart3 },
     ],
   },
 ]
 
-// Flat list — used by command palette, mobile drawer fallback, etc.
-export const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items)
+// Flat list — used by command palette, mobile drawer fallback, etc. We also
+// expose the routes that are reachable but hidden from the sidebar (Profile,
+// Admin, Duels, Compare, Wrapped) so ⌘K can still jump to them.
+import { User, Settings, Swords, GitCompare, Sparkles } from 'lucide-react'
 
+export const HIDDEN_NAV_ITEMS = [
+  { to: '/profile',  label: 'My Profile', icon: User },
+  { to: '/admin',    label: 'Admin',      icon: Settings },
+  { to: '/duels',    label: 'Duels',      icon: Swords },
+  { to: '/compare',  label: 'Compare',    icon: GitCompare },
+  { to: '/wrapped',  label: 'Wrapped',    icon: Sparkles },
+]
+
+export const NAV_ITEMS = [
+  ...NAV_GROUPS.flatMap((g) => g.items),
+  ...HIDDEN_NAV_ITEMS,
+]

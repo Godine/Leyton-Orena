@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ChevronDown } from 'lucide-react'
-import { NAV_GROUPS } from './navConfig.js'
+import { NAV_GROUPS, HIDDEN_NAV_ITEMS } from './navConfig.js'
 import RoleSwitcher from './RoleSwitcher.jsx'
 import Logo from '../Logo.jsx'
 
@@ -165,6 +165,18 @@ function MobileNavList() {
           </div>
         )
       })}
+
+      {/* Hidden-from-desktop destinations — Profile, Admin, Duels, Compare,
+          Wrapped. Surfaced here so mobile users (no topbar buttons, no ⌘K)
+          can still reach them. */}
+      <div className="mt-4 pt-3 border-t border-arena-border">
+        <div className="px-4 pb-2 text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold">
+          More
+        </div>
+        <div className="space-y-1">
+          {HIDDEN_NAV_ITEMS.map((item) => <MobileNavItem key={item.to} item={item} />)}
+        </div>
+      </div>
     </nav>
   )
 }

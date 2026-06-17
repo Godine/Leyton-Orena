@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { User, ChevronDown, ArrowUp, ArrowDown, Minus } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { User, ChevronDown, ArrowUp, ArrowDown, Minus, Sparkles, Swords, GitCompare, ArrowRight } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { buildLeaderboard, aggregate } from '../utils/computeRankings.js'
 import { closestToUnlock } from '../utils/badgeEligibility.js'
@@ -132,6 +133,8 @@ export default function Profile() {
         joinDate={JOIN_DATES[consultant.id] ?? '—'}
       />
 
+      <QuickActions consultantId={consultant.id} consultantName={consultant.name} />
+
       <section>
         <h2 className="font-display font-black text-arena-ink text-lg mb-3">This month</h2>
         <PerformanceRings currentMonth={currentStats} teamAverages={teamAverages} targets={consultant.targets} />
@@ -183,6 +186,68 @@ export default function Profile() {
         holders={openBadge ? consultants.filter((c) => c.badges?.includes(openBadge.id)) : []}
       />
     </div>
+  )
+}
+
+// Profile is the discovery hub for the three features that no longer live in
+// the sidebar: Wrapped (your end-of-quarter recap), Duels (challenge a peer
+// 1:1), and Compare (side-by-side stats).
+function QuickActions({ consultantId, consultantName }) {
+  const actions = [
+    {
+      to: '/wrapped',
+      icon: Sparkles,
+      title: 'Your Wrapped',
+      body: `${consultantName.split(' ')[0]}'s end-of-quarter recap — top stats, biggest wins, sharable cards.`,
+      accent: 'text-accent-amber', ring: 'ring-accent-amber/40', glow: 'shadow-[0_18px_42px_-20px_rgba(255,200,0,0.6)]',
+    },
+    {
+      to: '/duels',
+      icon: Swords,
+      title: 'Throw down a duel',
+      body: 'Challenge a teammate head-to-head. Pick a metric, a duration, a stake. Winner takes the pot.',
+      accent: 'text-accent-green', ring: 'ring-accent-green/40', glow: 'shadow-[0_18px_42px_-20px_rgba(45,212,191,0.55)]',
+    },
+    {
+      to: '/compare',
+      icon: GitCompare,
+      title: 'Compare with a peer',
+      body: 'Stack your numbers against any consultant — month, quarter, lifetime. See gaps at a glance.',
+      accent: 'text-arena-amber', ring: 'ring-arena-amber/40', glow: 'shadow-[0_18px_42px_-20px_rgba(247,92,3,0.55)]',
+    },
+  ]
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-black text-arena-ink text-lg">Quick actions</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {actions.map((a) => {
+          const Icon = a.icon
+          return (
+            <Link
+              key={a.to}
+              to={a.to}
+              className={[
+                'group arena-card p-4 flex items-start gap-3 ring-1 ring-inset',
+                a.ring, a.glow, 'hover:-translate-y-0.5 transition-transform',
+              ].join(' ')}
+            >
+              <span className={['h-10 w-10 rounded-xl bg-arena-bg/50 border border-arena-border grid place-items-center shrink-0', a.accent].join(' ')}>
+                <Icon size={18} strokeWidth={2.4} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="font-display font-black text-arena-ink truncate">{a.title}</div>
+                  <ArrowRight size={14} className="text-arena-muted group-hover:translate-x-0.5 transition-transform" strokeWidth={2.6} />
+                </div>
+                <p className="mt-1 text-xs text-arena-muted leading-relaxed">{a.body}</p>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
