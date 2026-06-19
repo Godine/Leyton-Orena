@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, ChevronDown, ArrowUp, ArrowDown, Minus, Sparkles, Swords, GitCompare, ArrowRight } from 'lucide-react'
+import { User, ChevronDown, ArrowUp, ArrowDown, Minus, Sparkles, Swords, GitCompare, ArrowRight, Lightbulb, LayoutDashboard } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { buildLeaderboard, aggregate } from '../utils/computeRankings.js'
 import { closestToUnlock } from '../utils/badgeEligibility.js'
@@ -18,6 +18,7 @@ import FireStreak from '../components/shared/FireStreak.jsx'
 import LoadingBar from '../components/shared/LoadingBar.jsx'
 import useStaleWhileChanging from '../components/shared/useStaleWhileChanging.js'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
+import CoachingTab from '../components/profile/CoachingTab.jsx'
 
 const JOIN_DATES = {
   'c-01': 'Mar 2022', 'c-02': 'Jun 2023', 'c-03': 'Sep 2021', 'c-04': 'Jan 2024',
@@ -39,6 +40,7 @@ export default function Profile() {
 
   const consultant = useArenaStore((s) => s.getById(currentUserId)) ?? consultants[0]
   const [openBadge, setOpenBadge] = useState(null)
+  const [tab, setTab] = useState('overview')
 
   const sortedMonths = useMemo(() => [...months].sort(), [months])
   const currentMonth = sortedMonths.at(-1)
@@ -135,6 +137,12 @@ export default function Profile() {
 
       <QuickActions consultantId={consultant.id} consultantName={consultant.name} />
 
+      <ProfileTabs tab={tab} onChange={setTab} />
+
+      {tab === 'coaching' ? (
+        <CoachingTab consultant={consultant} />
+      ) : (
+        <>
       <section>
         <h2 className="font-display font-black text-arena-ink text-lg mb-3">This month</h2>
         <PerformanceRings currentMonth={currentStats} teamAverages={teamAverages} targets={consultant.targets} />
@@ -178,6 +186,9 @@ export default function Profile() {
         </div>
       </div>
 
+        </>
+      )}
+
       <BadgeDetailModal
         badge={openBadge}
         open={Boolean(openBadge)}
@@ -185,6 +196,34 @@ export default function Profile() {
         currentUser={consultant}
         holders={openBadge ? consultants.filter((c) => c.badges?.includes(openBadge.id)) : []}
       />
+    </div>
+  )
+}
+
+function ProfileTabs({ tab, onChange }) {
+  const tabs = [
+    { id: 'overview', label: 'Overview',  icon: LayoutDashboard },
+    { id: 'coaching', label: 'Coaching',  icon: Lightbulb },
+  ]
+  return (
+    <div className="inline-flex bg-arena-bg/60 border border-arena-border rounded-full p-1 text-xs font-display font-bold">
+      {tabs.map((t) => {
+        const active = t.id === tab
+        const Icon = t.icon
+        return (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            className={[
+              'inline-flex items-center gap-1.5 px-4 py-2 rounded-full transition-colors',
+              active ? 'bg-accent-green text-arena-bg shadow-glow' : 'text-arena-muted hover:text-arena-ink',
+            ].join(' ')}
+          >
+            <Icon size={13} strokeWidth={2.6} />
+            {t.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

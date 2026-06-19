@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Gauge, Briefcase, Banknote, Zap, Clock, Flame, AlertTriangle, TrendingUp, ChevronRight,
+  LayoutDashboard, Activity, Lightbulb,
 } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { computeManagerInsights } from '../utils/computeManagerInsights.js'
@@ -10,6 +11,8 @@ import { formatCurrencyCompact } from '../utils/formatters.js'
 import AnimatedCounter from '../components/shared/AnimatedCounter.jsx'
 import LocationPill from '../components/shared/LocationPill.jsx'
 import TrendArrow from '../components/shared/TrendArrow.jsx'
+import TrendsTab from '../components/manager/TrendsTab.jsx'
+import CurveTab from '../components/manager/CurveTab.jsx'
 
 const SCOPES = ['All', 'Technical', 'Financial']
 
@@ -32,6 +35,7 @@ export default function Manager() {
   const setCurrentUserId = useArenaStore((s) => s.setCurrentUserId)
 
   const [scope, setScope] = useState('All')
+  const [tab, setTab] = useState('overview')
 
   const insights = useMemo(
     () => computeManagerInsights(consultants, months, scope),
@@ -59,32 +63,67 @@ export default function Manager() {
         </p>
       </header>
 
-      <KpiRow totals={insights.totals} />
+      <ManagerTabs tab={tab} onChange={setTab} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xl:gap-6">
-        <MoversCard
-          title="On fire"
-          icon={Flame}
-          accent="#F75C03"
-          rows={insights.onFire}
-          kind="momentum"
-          onPick={setCurrentUserId}
-          empty="No standout momentum this month."
-        />
-        <MoversCard
-          title="Needs attention"
-          icon={AlertTriangle}
-          accent="#ff4b4b"
-          rows={insights.needsAttention}
-          kind="attention"
-          onPick={setCurrentUserId}
-          empty="Everyone's tracking well — no flags."
-        />
-      </div>
+      {tab === 'overview' && (
+        <>
+          <KpiRow totals={insights.totals} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xl:gap-6">
+            <MoversCard
+              title="On fire"
+              icon={Flame}
+              accent="#F75C03"
+              rows={insights.onFire}
+              kind="momentum"
+              onPick={setCurrentUserId}
+              empty="No standout momentum this month."
+            />
+            <MoversCard
+              title="Needs attention"
+              icon={AlertTriangle}
+              accent="#ff4b4b"
+              rows={insights.needsAttention}
+              kind="attention"
+              onPick={setCurrentUserId}
+              empty="Everyone's tracking well — no flags."
+            />
+          </div>
+          <OfficeBreakdown byLocation={insights.byLocation} maxInvoice={insights.maxLocInvoice} />
+          <RosterTable roster={insights.roster} onPick={setCurrentUserId} />
+        </>
+      )}
 
-      <OfficeBreakdown byLocation={insights.byLocation} maxInvoice={insights.maxLocInvoice} />
+      {tab === 'trends' && <TrendsTab scope={scope} />}
+      {tab === 'curve'  && <CurveTab scope={scope} />}
+    </div>
+  )
+}
 
-      <RosterTable roster={insights.roster} onPick={setCurrentUserId} />
+function ManagerTabs({ tab, onChange }) {
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'trends',   label: 'Trends',   icon: Activity },
+    { id: 'curve',    label: 'The curve', icon: Lightbulb },
+  ]
+  return (
+    <div className="inline-flex bg-arena-bg/60 border border-arena-border rounded-full p-1 text-xs font-display font-bold">
+      {tabs.map((t) => {
+        const active = t.id === tab
+        const Icon = t.icon
+        return (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            className={[
+              'inline-flex items-center gap-1.5 px-4 py-2 rounded-full transition-colors',
+              active ? 'bg-accent-green text-arena-bg shadow-glow' : 'text-arena-muted hover:text-arena-ink',
+            ].join(' ')}
+          >
+            <Icon size={13} strokeWidth={2.6} />
+            {t.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

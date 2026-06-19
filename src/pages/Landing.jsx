@@ -7,7 +7,7 @@ import {
   Trophy, Flame, Swords, Gift, Sparkles, ShieldHalf, Crown, Award,
   ArrowRight, ChevronDown, Zap, Users, TrendingUp, TrendingDown, Calendar,
   Target, ThumbsUp, AlertTriangle, Gauge, CheckCircle2, Lock, Star, Coffee,
-  Pizza, Shirt, Plane, Briefcase, Headphones, Sun, MousePointerClick,
+  Pizza, Shirt, Plane, Briefcase, Headphones, Sun, MousePointerClick, Lightbulb,
 } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import { useArenaStore } from '../store/useArenaStore.js'
@@ -104,6 +104,7 @@ function TopNav() {
           <NavAnchor href="#badges">Badges</NavAnchor>
           <NavAnchor href="#rewards">Rewards</NavAnchor>
           <NavAnchor href="#manager">Manager</NavAnchor>
+          <NavAnchor href="#insights">Insights</NavAnchor>
         </nav>
 
         <Link
@@ -1323,6 +1324,237 @@ function Counter({ target, inView }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Final CTA
 // ─────────────────────────────────────────────────────────────────────────────
+// 7) Insights — coaching for the consultant + diagnosis for the manager
+// ─────────────────────────────────────────────────────────────────────────────
+function InsightsSection() {
+  const [view, setView] = useState('consultant')
+  return (
+    <section id="insights" className="relative max-w-7xl mx-auto px-5 md:px-8 py-24">
+      <SectionHeader
+        eyebrow="Coaching & diagnosis"
+        title="Insights for the consultant. Diagnosis for the manager."
+        body="Arena reads each consultant's last six months and produces honest, heuristic insights — strengths to celebrate, levers to pull, and a model of what would change if they pulled them. Managers get the same engine rolled up to the team, with a dedicated lens on the end-of-month and end-of-quarter spike."
+      />
+
+      {/* Toggle */}
+      <div className="mt-10 inline-flex rounded-full border p-1 text-xs font-display font-bold" style={{ background: C.bg, borderColor: C.border }}>
+        {[
+          { key: 'consultant', label: 'For the consultant' },
+          { key: 'manager',    label: 'For the manager' },
+        ].map((opt) => {
+          const active = view === opt.key
+          return (
+            <button
+              key={opt.key}
+              onClick={() => setView(opt.key)}
+              className="relative px-4 py-2 rounded-full"
+              style={{ color: active ? '#fff' : C.ink2 }}
+            >
+              {active && (
+                <motion.span
+                  layoutId="insights-pill"
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: opt.key === 'consultant' ? C.teal : C.orange, boxShadow: `0 6px 18px ${(opt.key === 'consultant' ? C.teal : C.orange)}66` }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
+              <span className="relative">{opt.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {view === 'consultant'
+          ? <ConsultantInsightView key="c" />
+          : <ManagerInsightView key="m" />}
+      </AnimatePresence>
+    </section>
+  )
+}
+
+function ConsultantInsightView() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.3 }}
+      className="mt-6 grid lg:grid-cols-12 gap-6"
+    >
+      {/* Mock coaching card */}
+      <div className="lg:col-span-7 rounded-[28px] border p-6 shadow-xl" style={{ background: '#fff', borderColor: C.border }}>
+        <div className="flex items-center gap-3">
+          <span className="h-11 w-11 rounded-2xl grid place-items-center" style={{ background: `${C.teal}1f`, color: C.teal, boxShadow: `inset 0 0 0 1px ${C.teal}55` }}>
+            <Lightbulb size={20} strokeWidth={2.4} />
+          </span>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.22em] font-display font-bold" style={{ color: C.muted }}>
+              Coaching · last 6 months
+            </div>
+            <div className="font-display font-black text-xl" style={{ color: C.ink }}>
+              <span style={{ color: C.teal }}>B</span> · Smooth the line
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          <InsightItem accent={C.teal} icon={Award} title="Strength · Fast closer"
+            body="3.2d handover → invoice. Faster than 72% of peers." />
+          <InsightItem accent={C.rose} icon={AlertTriangle} title="Lever · Back-loaded month"
+            body="48% invoiced before day 15. Most value ships in week 3–4." />
+        </div>
+
+        <div className="mt-4 rounded-2xl p-4" style={{ background: C.bg }}>
+          <div className="text-[10px] uppercase tracking-[0.18em] font-display font-bold mb-1.5" style={{ color: C.muted }}>
+            What to try next month
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="h-8 w-8 rounded-lg grid place-items-center shrink-0" style={{ background: `${C.orange}1c`, color: C.orange }}>
+              <Calendar size={15} strokeWidth={2.6} />
+            </span>
+            <div className="text-sm" style={{ color: C.ink2 }}>
+              <b style={{ color: C.ink }}>Ship one claim by day 10.</b> Lifts your early-invoice from 48% to 63% — flattens cadence and tiers up the Early Invoicing ladder.
+              <div className="mt-2 flex gap-2 flex-wrap text-[10px] uppercase tracking-wider font-display font-bold" style={{ color: C.muted }}>
+                <span className="px-2 py-0.5 rounded-full border" style={{ borderColor: C.border }}>Low effort</span>
+                <span className="px-2 py-0.5 rounded-full border" style={{ borderColor: C.border }}>High impact</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: `${C.amber}55`, background: `${C.amber}0d` }}>
+          <div className="text-[10px] uppercase tracking-[0.18em] font-display font-bold mb-1.5" style={{ color: C.amber }}>
+            What would change
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="font-display font-black text-2xl" style={{ color: C.teal }}>+2</div>
+              <div className="text-[10px] uppercase tracking-wider font-display font-bold" style={{ color: C.muted }}>ops / mo</div>
+            </div>
+            <div>
+              <div className="font-display font-black text-2xl" style={{ color: C.teal }}>+£18k</div>
+              <div className="text-[10px] uppercase tracking-wider font-display font-bold" style={{ color: C.muted }}>invoiced</div>
+            </div>
+            <div>
+              <div className="font-display font-black text-2xl" style={{ color: C.amber }}>↑↑</div>
+              <div className="text-[10px] uppercase tracking-wider font-display font-bold" style={{ color: C.muted }}>cadence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Why it works */}
+      <div className="lg:col-span-5 space-y-4">
+        <InsightPillar color={C.teal} icon={Lightbulb} title="Honest signals, not false precision" body="Every insight carries a confidence label — high, medium, or early signal. No predictions dressed up as certainty." />
+        <InsightPillar color={C.orange} icon={Target}   title="Always actionable"                 body="Strengths and weaknesses are paired with a concrete suggestion — what to try this month, the effort it takes and the impact you'd see." />
+        <InsightPillar color={C.amber} icon={Sparkles}  title="A model of the upside"             body="The 'What would change' projection turns coaching into a number: pull these levers and you'd see roughly +N ops and +£Xk." />
+        <InsightPillar color={C.purple} icon={Award}    title="Tied to the badge ladders"         body="Every recommendation maps to a badge tier — so improving and unlocking happen in the same motion." />
+      </div>
+    </motion.div>
+  )
+}
+
+function ManagerInsightView() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.3 }}
+      className="mt-6 grid lg:grid-cols-12 gap-6"
+    >
+      {/* Trends card */}
+      <div className="lg:col-span-6 rounded-[28px] border p-6 shadow-xl" style={{ background: '#fff', borderColor: C.border }}>
+        <div className="text-[10px] uppercase tracking-[0.22em] font-display font-bold" style={{ color: C.muted }}>
+          Manager · Trends
+        </div>
+        <div className="mt-1 font-display font-black text-xl" style={{ color: C.ink }}>
+          Every consultant, segmented by momentum
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <SegPill k="Improving" v="9"  c={C.teal}    />
+          <SegPill k="Steady"    v="7"  c={C.amber}   />
+          <SegPill k="Spiky"     v="5"  c={C.orange}  />
+          <SegPill k="Sliding"   v="3"  c={C.rose}    />
+        </div>
+        <div className="mt-4 rounded-2xl p-3" style={{ background: C.bg }}>
+          <div className="text-xs" style={{ color: C.ink2 }}>
+            <b style={{ color: C.ink }}>Per-consultant card</b> shows momentum, the top strength, the top risk, and a one-tap "Nudge" button that sends a coaching prompt to the consultant via Teams.
+          </div>
+        </div>
+      </div>
+
+      {/* Curve card */}
+      <div className="lg:col-span-6 rounded-[28px] border p-6 shadow-xl" style={{ background: '#fff', borderColor: C.border }}>
+        <div className="text-[10px] uppercase tracking-[0.22em] font-display font-bold" style={{ color: C.muted }}>
+          Manager · The curve
+        </div>
+        <div className="mt-1 font-display font-black text-xl" style={{ color: C.ink }}>
+          Diagnose the end-of-month and end-of-quarter spike
+        </div>
+        <div className="mt-4 rounded-2xl p-3" style={{ background: C.bg }}>
+          <div className="text-xs" style={{ color: C.ink2 }}>
+            <b style={{ color: C.ink }}>~52% of value ships after day 15. Quarter-end runs +18% above other months.</b>
+          </div>
+        </div>
+        <ul className="mt-4 space-y-2 text-sm" style={{ color: C.ink2 }}>
+          <li className="flex items-start gap-2"><span style={{ color: C.rose }}>!</span> Top back-loaded contributors — who's driving the spike</li>
+          <li className="flex items-start gap-2"><span style={{ color: C.teal }}>✓</span> Office breakdown — which offices front-load best</li>
+          <li className="flex items-start gap-2"><span style={{ color: C.amber }}>→</span> Per-month trend with quarter-end annotations</li>
+        </ul>
+      </div>
+
+      <div className="lg:col-span-12 grid md:grid-cols-3 gap-4 mt-2">
+        <InsightPillar color={C.orange} icon={Lightbulb} title="Answer the 'why' question"     body="The curve breaks down by office, role, and consultant — surfacing who's pushing volume into the second half of the month." />
+        <InsightPillar color={C.teal}   icon={Target}    title="Coach with one click"          body="Send a nudge with the exact behaviour to change. Public shout-out for the improving. Quiet check-in for the sliding." />
+        <InsightPillar color={C.purple} icon={Sparkles}  title="Compound over quarters"        body="As quarters accumulate, the strongest heuristics graduate into a learned model. You'll see the rules sharpen with the data." />
+      </div>
+    </motion.div>
+  )
+}
+
+function InsightItem({ accent, icon: Icon, title, body }) {
+  return (
+    <div className="rounded-2xl border p-3" style={{ background: C.bg, borderColor: C.border }}>
+      <div className="flex items-center gap-2">
+        <span className="h-8 w-8 rounded-lg grid place-items-center" style={{ background: `${accent}1c`, color: accent }}>
+          <Icon size={14} strokeWidth={2.6} />
+        </span>
+        <div className="font-display font-black text-sm" style={{ color: C.ink }}>{title}</div>
+      </div>
+      <p className="mt-1.5 text-xs leading-relaxed" style={{ color: C.ink2 }}>{body}</p>
+    </div>
+  )
+}
+
+function InsightPillar({ color, icon: Icon, title, body }) {
+  return (
+    <motion.div
+      whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      className="rounded-2xl border p-5 shadow-sm"
+      style={{ background: '#fff', borderColor: C.border }}
+    >
+      <div className="flex items-center gap-3">
+        <span className="h-10 w-10 rounded-xl grid place-items-center" style={{ background: `${color}1f`, color, boxShadow: `inset 0 0 0 1px ${color}55` }}>
+          <Icon size={18} strokeWidth={2.4} />
+        </span>
+        <div className="font-display font-black text-base" style={{ color: C.ink }}>{title}</div>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed" style={{ color: C.ink2 }}>{body}</p>
+    </motion.div>
+  )
+}
+
+function SegPill({ k, v, c }) {
+  return (
+    <div className="rounded-xl border p-3 flex items-center justify-between" style={{ borderColor: C.border, background: C.bg }}>
+      <div className="text-xs font-display font-bold" style={{ color: C.ink2 }}>{k}</div>
+      <div className="inline-flex items-center gap-1">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />
+        <span className="font-display font-black tabular-nums" style={{ color: C.ink }}>{v}</span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 function FinalCTA() {
   const navigate = useNavigate()
   return (
@@ -1429,6 +1661,7 @@ export default function Landing() {
       <BadgesSection />
       <RewardsSection />
       <ManagerSection />
+      <InsightsSection />
       <FinalCTA />
       <Footer />
     </div>
