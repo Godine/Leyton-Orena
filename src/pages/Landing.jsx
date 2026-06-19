@@ -1333,7 +1333,7 @@ function InsightsSection() {
       <SectionHeader
         eyebrow="Coaching & diagnosis"
         title="Insights for the consultant. Diagnosis for the manager."
-        body="Arena reads each consultant's last six months and produces honest, heuristic insights — strengths to celebrate, levers to pull, and a model of what would change if they pulled them. Managers get the same engine rolled up to the team, with a dedicated lens on the end-of-month and end-of-quarter spike."
+        body="Arena reads each consultant's last six months — including how often they push accounts into the next month and how often they pull future months forward — and produces honest, heuristic insights. Managers get the same engine rolled up to the team, with a dedicated lens on the end-of-month and end-of-quarter spike and a Pipeline discipline panel that names the late-week pushers and the pull-forward heroes."
       />
 
       {/* Toggle */}
@@ -1399,8 +1399,8 @@ function ConsultantInsightView() {
         <div className="mt-5 grid sm:grid-cols-2 gap-3">
           <InsightItem accent={C.teal} icon={Award} title="Strength · Fast closer"
             body="3.2d handover → invoice. Faster than 72% of peers." />
-          <InsightItem accent={C.rose} icon={AlertTriangle} title="Lever · Back-loaded month"
-            body="48% invoiced before day 15. Most value ships in week 3–4." />
+          <InsightItem accent={C.rose} icon={AlertTriangle} title="Lever · Last-week pusher"
+            body="42% of pushes happen in the final week — the worst pattern. Surface risk on Tuesdays, not the 28th." />
         </div>
 
         <div className="mt-4 rounded-2xl p-4" style={{ background: C.bg }}>
@@ -1495,8 +1495,8 @@ function ManagerInsightView() {
           </div>
         </div>
         <ul className="mt-4 space-y-2 text-sm" style={{ color: C.ink2 }}>
-          <li className="flex items-start gap-2"><span style={{ color: C.rose }}>!</span> Top back-loaded contributors — who's driving the spike</li>
-          <li className="flex items-start gap-2"><span style={{ color: C.teal }}>✓</span> Office breakdown — which offices front-load best</li>
+          <li className="flex items-start gap-2"><span style={{ color: C.rose }}>!</span> Last-week pushers — pushes that cluster just before close</li>
+          <li className="flex items-start gap-2"><span style={{ color: C.teal }}>✓</span> Pull-forward heroes — accurate plan + over-delivery</li>
           <li className="flex items-start gap-2"><span style={{ color: C.amber }}>→</span> Per-month trend with quarter-end annotations</li>
         </ul>
       </div>

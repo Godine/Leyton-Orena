@@ -4,6 +4,7 @@ import {
   Zap, Gauge, TrendingUp, TrendingDown, CheckCircle2, Flame, Shield,
   Calendar, Clock, Activity, RotateCw, FlameKindling, Sparkles,
   Award, ArrowUpRight, AlertTriangle, Lightbulb, Target,
+  ArrowRightFromLine, ArrowLeftFromLine, AlarmClockOff,
 } from 'lucide-react'
 import { useArenaStore } from '../../store/useArenaStore.js'
 import { coachingInsights } from '../../utils/coachingInsights.js'
@@ -23,6 +24,10 @@ const ICONS = {
   redo: RotateCw,
   'flame-off': FlameKindling,
   sparkles: Sparkles,
+  target: Target,
+  push: ArrowRightFromLine,
+  'pull-forward': ArrowLeftFromLine,
+  'push-late': AlarmClockOff,
 }
 
 const MOMENTUM_STYLES = {
@@ -53,6 +58,7 @@ export default function CoachingTab({ consultant }) {
     <div className="space-y-6 xl:space-y-8">
       <HeadlineCard insight={insight} />
       <RhythmCard insight={insight} />
+      <PlanningDisciplineCard insight={insight} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xl:gap-6">
         <StrengthsCard items={insight.strengths} />
@@ -219,6 +225,131 @@ function diagnosisCopy(insight) {
 function labelMonth(iso) {
   const [, m] = iso.split('-')
   return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m) - 1]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+const PLANNING_TAGS = {
+  reliable:           { label: 'Reliable forecaster', color: 'text-accent-green',  ring: 'ring-accent-green/30',  tint: 'bg-accent-green/10', icon: Target,           sub: 'Plan = reality. Finance trusts your numbers.' },
+  puller:             { label: 'Pulls forward',       color: 'text-accent-amber',  ring: 'ring-accent-amber/30',  tint: 'bg-accent-amber/10', icon: ArrowLeftFromLine, sub: 'Plan accurate AND over-delivering by pulling.' },
+  pusher:             { label: 'Pushes accounts',     color: 'text-accent-coral',  ring: 'ring-accent-coral/30',  tint: 'bg-accent-coral/10', icon: ArrowRightFromLine, sub: 'Committed work slips into later months too often.' },
+  'last-week-pusher': { label: 'Last-week pusher',    color: 'text-arena-amber',   ring: 'ring-arena-amber/30',   tint: 'bg-arena-amber/10',  icon: AlarmClockOff,     sub: 'Pushes cluster in the final week — the worst pattern.' },
+}
+
+function PlanningDisciplineCard({ insight }) {
+  const tag = PLANNING_TAGS[insight.planningTag] ?? PLANNING_TAGS.reliable
+  const Icon = tag.icon
+  const f = insight.facts
+  const pushed = Math.round(f.avgPushed * insight.rhythm.length)
+  const pulled = Math.round(f.avgPulled * insight.rhythm.length)
+  const late = Math.round(f.avgLatePushed * insight.rhythm.length)
+  const net = pulled - pushed
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-black text-arena-ink text-lg flex items-center gap-2">
+          <Target size={18} className="text-arena-amber" /> Planning discipline
+        </h2>
+        <span className="text-xs text-arena-muted">Last {insight.rhythm.length} months</span>
+      </div>
+      <div className={['arena-card p-5 md:p-6 ring-1 ring-inset', tag.ring].join(' ')}>
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <span className={['h-12 w-12 rounded-2xl grid place-items-center', tag.tint, tag.color].join(' ')}>
+              <Icon size={22} strokeWidth={2.4} />
+            </span>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-arena-muted font-display font-bold">
+                Forecast pattern
+              </div>
+              <div className={['font-display font-black text-2xl', tag.color].join(' ')}>
+                {tag.label}
+              </div>
+              <div className="text-xs text-arena-muted mt-0.5">{tag.sub}</div>
+            </div>
+          </div>
+          <div className="md:ml-auto grid grid-cols-2 md:grid-cols-4 gap-2">
+            <PlanStat label="Planning acc." value={`${Math.round(f.planningAccuracy * 100)}%`} tint="text-arena-ink" />
+            <PlanStat label="Pushed"        value={`${pushed}`} sub={`${Math.round(f.pushRate * 100)}% of plan`} tint="text-accent-coral" />
+            <PlanStat label="Pulled fwd"    value={`${pulled}`} sub={`${Math.round(f.pullRate * 100)}% of plan`} tint="text-accent-amber" />
+            <PlanStat label="Late-week"     value={`${late}`} sub={`${Math.round(f.latePushRate * 100)}% of pushes`} tint="text-arena-amber" />
+          </div>
+        </div>
+
+        {/* Push vs Pull bar */}
+        <div className="mt-5">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold mb-2">
+            Net movement · {net > 0 ? '+' : ''}{net} claims
+          </div>
+          <PushPullBar pushed={pushed} pulled={pulled} late={late} />
+          <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">
+            <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-accent-amber" /> Pulled forward</span>
+            <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-accent-coral" /> Pushed</span>
+            <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-arena-amber" /> Last-week pushes</span>
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm text-arena-muted leading-relaxed">
+          {planningCopy(insight)}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function PlanStat({ label, value, sub, tint }) {
+  return (
+    <div className="rounded-xl bg-arena-bg/40 border border-arena-border p-3">
+      <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{label}</div>
+      <div className={['mt-0.5 font-display font-black text-lg', tint].join(' ')}>{value}</div>
+      {sub && <div className="text-[10px] text-arena-muted">{sub}</div>}
+    </div>
+  )
+}
+
+function PushPullBar({ pushed, pulled, late }) {
+  const total = Math.max(pushed + pulled, 1)
+  const pulledPct = (pulled / total) * 100
+  const pushedPct = ((pushed - late) / total) * 100
+  const latePct = (late / total) * 100
+  return (
+    <div className="h-3 rounded-full overflow-hidden flex bg-arena-bg/40 border border-arena-border">
+      {pulled > 0 && (
+        <motion.div
+          initial={{ width: 0 }} animate={{ width: `${pulledPct}%` }} transition={{ duration: 0.9 }}
+          className="h-full bg-accent-amber"
+          title={`Pulled forward: ${pulled}`}
+        />
+      )}
+      {pushed - late > 0 && (
+        <motion.div
+          initial={{ width: 0 }} animate={{ width: `${pushedPct}%` }} transition={{ duration: 0.9 }}
+          className="h-full bg-accent-coral"
+          title={`Pushed: ${pushed - late}`}
+        />
+      )}
+      {late > 0 && (
+        <motion.div
+          initial={{ width: 0 }} animate={{ width: `${latePct}%` }} transition={{ duration: 0.9 }}
+          className="h-full bg-arena-amber"
+          title={`Last-week pushes: ${late}`}
+        />
+      )}
+    </div>
+  )
+}
+
+function planningCopy(insight) {
+  const f = insight.facts
+  if (insight.planningTag === 'last-week-pusher') {
+    return `Pushes cluster in the final week of the month — that's work you committed to, then quietly slipped. Surface risk on Tuesday, never on the 28th. Even one early flag a week shifts this tag.`
+  }
+  if (insight.planningTag === 'pusher') {
+    return `${Math.round(f.pushRate * 100)}% of committed ops end up in a later month. Manager and finance can't plan around your forecast — and pushes feed the end-of-month spike. Tighten by reviewing the plan weekly.`
+  }
+  if (insight.planningTag === 'puller') {
+    return `You're not just hitting plan — you're pulling forward from future months. That builds team buffer and absorbs crunch elsewhere. Keep going.`
+  }
+  return `Forecast accuracy is high. Pull one claim forward next month to unlock the over-delivery tier — you've got the runway.`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

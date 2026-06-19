@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, TrendingUp, AlertTriangle, Lightbulb, ArrowRight, MapPin } from 'lucide-react'
+import {
+  Calendar, TrendingUp, AlertTriangle, Lightbulb, ArrowRight, MapPin,
+  ArrowRightFromLine, ArrowLeftFromLine, AlarmClockOff, Target,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useArenaStore } from '../../store/useArenaStore.js'
 import { managerTrendsForTeam } from '../../utils/coachingInsights.js'
@@ -26,12 +29,129 @@ export default function CurveTab({ scope }) {
 
       <CurveChart trends={trends} />
 
+      <PipelineDiscipline trends={trends} onOpen={openProfile} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <BackLoadContributors rows={trends.backLoadContrib} onOpen={openProfile} />
         <OfficeBreakdown rows={trends.officeRows} />
       </div>
 
       <Footnote />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+function PipelineDiscipline({ trends, onOpen }) {
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-black text-arena-ink text-lg flex items-center gap-2">
+          <Target size={18} className="text-arena-amber" /> Pipeline discipline
+        </h2>
+        <span className="text-xs text-arena-muted">
+          Team planning accuracy <b className="text-arena-ink">{Math.round(trends.teamPlanning * 100)}%</b>
+          {' · '}
+          last-week pushes <b className="text-arena-ink">{Math.round(trends.teamLatePushShare * 100)}%</b>
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DisciplineColumn
+          title="Worst — pushes accounts"
+          subtitle="Especially in the final week of the month"
+          tone="bad"
+          icon={AlarmClockOff}
+          empty="Nobody pushing meaningfully — your team forecasts well."
+          rows={trends.pushers}
+          onOpen={onOpen}
+        />
+        <DisciplineColumn
+          title="Best — pulls work forward"
+          subtitle="Accurate plan + over-delivery from future months"
+          tone="good"
+          icon={ArrowLeftFromLine}
+          empty="No one's net-pulling this window — consider a 'pull forward' challenge."
+          rows={trends.pullers}
+          onOpen={onOpen}
+        />
+      </div>
+
+      <div className="mt-4 arena-card p-4 text-sm text-arena-muted leading-relaxed">
+        <Lightbulb size={14} className="inline text-arena-amber mr-1.5 -mt-0.5" />
+        The "worst type" pattern is a consultant whose pushes cluster in the final week of the month —
+        commitments quietly slipping just before close. The "best type" is the opposite: a plan that holds, plus
+        the discipline to pull forward when capacity allows. Coach the left column, celebrate the right.
+      </div>
+    </section>
+  )
+}
+
+function DisciplineColumn({ title, subtitle, tone, icon: Icon, rows, onOpen, empty }) {
+  const tint =
+    tone === 'bad'
+      ? { card: 'ring-accent-coral/25', chip: 'bg-accent-coral/15 text-accent-coral', barFrom: '#ff4b4b', barTo: '#F75C03' }
+      : { card: 'ring-accent-green/25', chip: 'bg-accent-green/15 text-accent-green', barFrom: '#ffc800', barTo: '#2DD4BF' }
+  return (
+    <div className={['arena-card p-4 ring-1 ring-inset', tint.card].join(' ')}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={['h-9 w-9 rounded-xl grid place-items-center', tint.chip].join(' ')}>
+          <Icon size={16} strokeWidth={2.6} />
+        </span>
+        <div>
+          <div className="font-display font-black text-arena-ink">{title}</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{subtitle}</div>
+        </div>
+      </div>
+      {rows.length === 0 ? (
+        <div className="text-sm text-arena-muted p-3">{empty}</div>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((r, i) => {
+            const c = r.consultant
+            const initials = c.name.split(' ').map((x) => x[0]).slice(0, 2).join('').toUpperCase()
+            const headline = tone === 'bad'
+              ? `${Math.round(r.pushRate * 100)}% pushed · ${Math.round(r.latePushRate * 100)}% in last week`
+              : `${Math.round(r.pullRate * 100)}% pulled · ${Math.round(r.planningAccuracy * 100)}% accurate`
+            const w = tone === 'bad'
+              ? Math.min(100, r.pushRate * 100 + r.latePushRate * 60)
+              : Math.min(100, r.pullRate * 200)
+            return (
+              <motion.button
+                key={c.id}
+                initial={{ opacity: 0, x: tone === 'bad' ? -8 : 8 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => onOpen(c.id)}
+                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-arena-surface2/60 transition-colors"
+              >
+                <span
+                  className="h-9 w-9 rounded-lg grid place-items-center font-display font-black text-arena-bg text-xs shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#F75C03,#ffc800)' }}
+                >
+                  {initials}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="font-display font-black text-arena-ink truncate text-sm">{c.name}</div>
+                    <div className="text-xs font-display font-bold text-arena-muted">{c.location}</div>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-arena-bg/60 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }} animate={{ width: `${w}%` }} transition={{ duration: 0.9 }}
+                      className="h-full rounded-full"
+                      style={{ background: `linear-gradient(90deg, ${tint.barFrom}, ${tint.barTo})` }}
+                    />
+                  </div>
+                  <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">
+                    {headline}
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-arena-muted shrink-0" />
+              </motion.button>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }
@@ -57,8 +177,9 @@ function DiagnosisCard({ trends }) {
             ~{avgBackLoaded}% of value ships after day 15. Quarter-end runs {qPos} above other months.
           </h2>
           <p className="mt-2 text-sm text-arena-muted leading-relaxed">
-            This is the spike. It's driven by a handful of consultants pushing claims into the second half of the month and a culture that
-            accelerates around quarter close. The list below shows who's contributing most to the back-loaded share — start coaching there.
+            This is the spike. It's driven by two compounding behaviours: a handful of consultants <b className="text-arena-ink">pushing accounts</b> from
+            this month into next (especially in the final week — the worst pattern), and a culture that accelerates around quarter close.
+            The Pipeline discipline panel below shows who's worth coaching versus celebrating.
           </p>
         </div>
       </div>

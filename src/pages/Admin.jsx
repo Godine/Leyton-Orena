@@ -400,6 +400,8 @@ const COLS = [
   { key: 'avgDaysToClose',        label: 'Days',      step: 0.1, min: 0 },
   { key: 'clientRetentionFlags',  label: 'Flags',     step: 1,   min: 0 },
   { key: 'pushedOps',             label: 'Pushed',    step: 1,   min: 0 },
+  { key: 'pulledOps',             label: 'Pulled',    step: 1,   min: 0 },
+  { key: 'latePushedOps',         label: 'Late push', step: 1,   min: 0 },
 ]
 
 function StatsTable({ consultants, month, onEdit }) {

@@ -65,7 +65,22 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
   const front  = window.map((s) => s.invoiceBeforeDay15Pct)
   const close  = window.map((s) => s.avgDaysToClose)
   const pushed = window.map((s) => s.pushedOps ?? 0)
+  const pulled = window.map((s) => s.pulledOps ?? 0)
+  const latePushed = window.map((s) => s.latePushedOps ?? 0)
   const flags  = window.map((s) => s.clientRetentionFlags ?? 0)
+
+  // Planning discipline — accuracy + push/pull behaviour.
+  // planned = ops actually delivered + ops that slipped (pushed) — what they
+  // committed to. Pulled ops are over-delivery from a future commitment.
+  const planned = ops.map((o, i) => o + pushed[i])
+  const plannedTotal = planned.reduce((a, b) => a + b, 0)
+  const pushedTotal = pushed.reduce((a, b) => a + b, 0)
+  const pulledTotal = pulled.reduce((a, b) => a + b, 0)
+  const latePushedTotal = latePushed.reduce((a, b) => a + b, 0)
+  const pushRate     = plannedTotal ? pushedTotal     / plannedTotal : 0
+  const pullRate     = plannedTotal ? pulledTotal     / plannedTotal : 0
+  const latePushRate = pushedTotal  ? latePushedTotal / pushedTotal  : 0
+  const planningAccuracy = 1 - pushRate
 
   // Per-consultant facts
   const facts = {
@@ -74,6 +89,8 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
     avgFront:      mean(front),
     avgClose:      mean(close),
     avgPushed:     mean(pushed),
+    avgPulled:     mean(pulled),
+    avgLatePushed: mean(latePushed),
     avgFlags:      mean(flags),
     cvOps:         cv(ops),
     cvFront:       cv(front),
@@ -81,6 +98,13 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
     slopeInv:      trendSlope(inv),
     slopeFront:    trendSlope(front),
     slopeClose:    trendSlope(close),
+    slopePushed:   trendSlope(pushed),
+    slopePulled:   trendSlope(pulled),
+    pushRate,
+    pullRate,
+    latePushRate,
+    planningAccuracy,
+    netMovement:   pulledTotal - pushedTotal, // positive = net pulled forward
     bestMonth:     window.reduce((m, s) => (s.invoiceValue > (m?.invoiceValue ?? -1) ? s : m), null),
     worstMonth:    window.reduce((m, s) => (s.invoiceValue < (m?.invoiceValue ?? Infinity) ? s : m), null),
     currentStreak: consultant.fire?.current ?? 0,
@@ -91,21 +115,30 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
   // Peer percentiles within same role
   const peerStats = peers.map((p) => {
     const s = p.monthlyStats.filter((m) => last6.includes(m.month))
+    const pPlanned = s.reduce((a, b) => a + b.opsDelivered + (b.pushedOps ?? 0), 0)
+    const pPushed  = s.reduce((a, b) => a + (b.pushedOps ?? 0), 0)
+    const pPulled  = s.reduce((a, b) => a + (b.pulledOps ?? 0), 0)
     return {
       avgFront: mean(s.map((x) => x.invoiceBeforeDay15Pct)),
       avgClose: mean(s.map((x) => x.avgDaysToClose)),
       avgOps:   mean(s.map((x) => x.opsDelivered)),
       avgInv:   mean(s.map((x) => x.invoiceValue)),
       cvOps:    cv(s.map((x) => x.opsDelivered)),
+      pushRate: pPlanned ? pPushed / pPlanned : 0,
+      pullRate: pPlanned ? pPulled / pPlanned : 0,
+      planning: pPlanned ? 1 - (pPushed / pPlanned) : 1,
     }
   })
 
   const rk = {
-    front: pctRank(facts.avgFront, peerStats.map((p) => p.avgFront), true),
-    close: pctRank(facts.avgClose, peerStats.map((p) => p.avgClose), false),
-    ops:   pctRank(facts.avgOps,   peerStats.map((p) => p.avgOps),   true),
-    inv:   pctRank(facts.avgInv,   peerStats.map((p) => p.avgInv),   true),
-    cvOps: pctRank(facts.cvOps,    peerStats.map((p) => p.cvOps),    false),
+    front:    pctRank(facts.avgFront,          peerStats.map((p) => p.avgFront), true),
+    close:    pctRank(facts.avgClose,          peerStats.map((p) => p.avgClose), false),
+    ops:      pctRank(facts.avgOps,            peerStats.map((p) => p.avgOps),   true),
+    inv:      pctRank(facts.avgInv,            peerStats.map((p) => p.avgInv),   true),
+    cvOps:    pctRank(facts.cvOps,             peerStats.map((p) => p.cvOps),    false),
+    push:     pctRank(facts.pushRate,          peerStats.map((p) => p.pushRate), false),
+    pull:     pctRank(facts.pullRate,          peerStats.map((p) => p.pullRate), true),
+    planning: pctRank(facts.planningAccuracy,  peerStats.map((p) => p.planning), true),
   }
 
   // ─── Rule book → strengths / weaknesses / recommendations ──────────────
@@ -152,6 +185,21 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
       detail: `Less than 0.5 retention flags per month on average — clients keep coming back.`,
       strength: 0.7,
     },
+    {
+      when: facts.planningAccuracy >= 0.9 && rk.planning >= 0.65,
+      icon: 'target',
+      title: 'Reliable forecaster',
+      detail: `Planning accuracy ${Math.round(facts.planningAccuracy * 100)}% — what you commit to ships. Top ${Math.round((1 - rk.planning) * 100)}% of peers.`,
+      strength: Math.min(1, facts.planningAccuracy),
+    },
+    {
+      when: facts.pullRate >= 0.1 && facts.netMovement > 0,
+      icon: 'pull-forward',
+      title: 'Pulls work forward',
+      detail: `Pulled ${pulledTotal} claim${pulledTotal === 1 ? '' : 's'} forward from future months and net delivered ahead of plan. ` +
+              `That's how you build buffer for crunch.`,
+      strength: Math.min(1, facts.pullRate * 2.5),
+    },
   ]
 
   const WEAKNESS_RULES = [
@@ -196,6 +244,24 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
       title: 'Broken streak',
       detail: `Fire is at 0 (best was ${facts.bestStreak}). One advance today restarts it.`,
       severity: 0.6,
+    },
+    {
+      when: facts.latePushRate > 0.4 && facts.avgLatePushed >= 0.5,
+      // The pattern the user called "the worst type": pushing accounts
+      // from this month into next in the final week.
+      icon: 'push-late',
+      title: 'Last-week pusher',
+      detail: `~${Math.round(facts.latePushRate * 100)}% of your pushes happen in the final week of the month. ` +
+              `That's the worst signal — work was committed, then quietly slipped at the wire. Surface risks earlier.`,
+      severity: Math.min(1, facts.latePushRate + 0.2),
+    },
+    {
+      when: facts.pushRate > 0.18,
+      icon: 'push',
+      title: 'Pushes accounts',
+      detail: `${Math.round(facts.pushRate * 100)}% of committed ops slip into a later month on average. ` +
+              `Forecast accuracy is ${Math.round(facts.planningAccuracy * 100)}% — finance can't plan around that.`,
+      severity: Math.min(1, facts.pushRate * 3),
     },
   ]
 
@@ -271,6 +337,28 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
       impact: 'High · momentum',
     })
   }
+  if (facts.latePushRate > 0.4 || facts.pushRate > 0.18) {
+    recs.push({
+      priority: 'high',
+      icon: 'push-late',
+      title: 'Tuesday risk checkpoint',
+      body: `Every Tuesday, flag any committed claim at risk for the month. Push early, never in the final week. ` +
+            `Lifts planning accuracy from ${Math.round(facts.planningAccuracy * 100)}% — and finance starts trusting your forecast.`,
+      effort: 'Low · 5 min/week',
+      impact: 'High · forecast trust',
+    })
+  }
+  if (facts.pullRate < 0.05 && facts.cvOps < 0.35 && facts.planningAccuracy > 0.85) {
+    recs.push({
+      priority: 'medium',
+      icon: 'pull-forward',
+      title: 'Pull one claim forward',
+      body: `Plan is solid — there's room to over-deliver. Pull one claim from next month to land it early. ` +
+            `Builds buffer for crunch and unlocks the Pull-forward tier.`,
+      effort: 'Medium · pipeline review',
+      impact: 'High · buffer + badge',
+    })
+  }
   if (facts.slopeFront < -0.04 && facts.avgFront >= 55) {
     recs.push({
       priority: 'medium',
@@ -326,17 +414,24 @@ export function coachingInsights(consultant, allConsultants, sortedMonths) {
     : facts.cvOps > 0.35                              ? 'spiky'
     : 'steady'
 
-  // Headline grade
+  // Headline grade — planning discipline now part of the rubric.
   const grade =
-    rk.inv >= 0.75 && rk.front >= 0.6 && facts.cvOps < 0.3 ? 'A'
-    : rk.inv >= 0.5 && rk.front >= 0.5                     ? 'B'
-    : rk.inv >= 0.3                                        ? 'C'
-    :                                                        'D'
+    rk.inv >= 0.75 && rk.front >= 0.6 && facts.cvOps < 0.3 && facts.planningAccuracy >= 0.9 ? 'A'
+    : rk.inv >= 0.5 && rk.front >= 0.5 && facts.planningAccuracy >= 0.8                     ? 'B'
+    : rk.inv >= 0.3 && facts.latePushRate < 0.5                                              ? 'C'
+    :                                                                                         'D'
+
+  // Planning discipline tag — one of four states the UI can theme on.
+  const planningTag =
+    facts.latePushRate > 0.4 && facts.avgLatePushed >= 0.5 ? 'last-week-pusher'
+    : facts.pushRate > 0.18                                ? 'pusher'
+    : facts.pullRate >= 0.1 && facts.netMovement > 0       ? 'puller'
+    :                                                        'reliable'
 
   return {
     consultant,
     facts, rk, rhythm, projection,
-    momentum, grade,
+    momentum, grade, planningTag,
     strengths, weaknesses, recs,
   }
 }
@@ -351,6 +446,7 @@ export function managerTrendsForTeam(consultants, sortedMonths, roleFilter = 'Al
       consultant: c,
       momentum: i.momentum,
       grade: i.grade,
+      planningTag: i.planningTag,
       facts: i.facts,
       topStrength: i.strengths[0] ?? null,
       topRisk: i.weaknesses[0] ?? null,
@@ -360,8 +456,13 @@ export function managerTrendsForTeam(consultants, sortedMonths, roleFilter = 'Al
       avgFront: i.facts.avgFront,
       avgClose: i.facts.avgClose,
       currentStreak: i.facts.currentStreak,
+      pushRate: i.facts.pushRate,
+      pullRate: i.facts.pullRate,
+      latePushRate: i.facts.latePushRate,
+      planningAccuracy: i.facts.planningAccuracy,
+      netMovement: i.facts.netMovement,
       // single-number health for sorting
-      health: i.rk.inv * 0.4 + i.rk.front * 0.3 + i.rk.cvOps * 0.2 + (i.facts.currentStreak >= 7 ? 0.1 : 0),
+      health: i.rk.inv * 0.35 + i.rk.front * 0.25 + i.rk.cvOps * 0.15 + i.rk.planning * 0.15 + (i.facts.currentStreak >= 7 ? 0.1 : 0),
     }
   })
 
@@ -424,9 +525,29 @@ export function managerTrendsForTeam(consultants, sortedMonths, roleFilter = 'Al
     avgClose: o.closeSum / o.headcount,
   })).sort((a, b) => b.inv - a.inv)
 
+  // Pipeline discipline — top pushers (worst) and top pullers (best). Rank
+  // pushers by latePushRate first (the "worst type") then total pushRate.
+  const pushers = [...rows]
+    .filter((r) => r.pushRate > 0.08 || r.latePushRate > 0.2)
+    .sort((a, b) => (b.latePushRate * 0.6 + b.pushRate * 0.4) - (a.latePushRate * 0.6 + a.pushRate * 0.4))
+    .slice(0, 6)
+  const pullers = [...rows]
+    .filter((r) => r.netMovement > 0 && r.pullRate >= 0.08)
+    .sort((a, b) => (b.pullRate - b.pushRate) - (a.pullRate - a.pushRate))
+    .slice(0, 6)
+
+  // Team-wide planning-accuracy single number, weighted by planned volume.
+  const totalPlanned = rows.reduce((a, r) => a + (r.facts.avgOps + r.facts.avgPushed), 0)
+  const teamPlanning = totalPlanned
+    ? rows.reduce((a, r) => a + r.planningAccuracy * (r.facts.avgOps + r.facts.avgPushed), 0) / totalPlanned
+    : 1
+  const teamLatePushShare = rows.reduce((a, r) => a + r.facts.avgLatePushed, 0)
+                          / Math.max(rows.reduce((a, r) => a + r.facts.avgPushed, 0), 1)
+
   return {
     rows, improving, sliding, spiky, steady,
     curve, qEndAvg, nonQEndAvg, quarterUplift,
     backLoadContrib, officeRows,
+    pushers, pullers, teamPlanning, teamLatePushShare,
   }
 }
