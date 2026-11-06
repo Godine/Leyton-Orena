@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Flame, Check, ChevronDown, FileSpreadsheet, User, ShieldAlert } from 'lucide-react'
-import ProgressRing from '../../components/shared/ProgressRing.jsx'
-import AnimatedCounter from '../../components/shared/AnimatedCounter.jsx'
 import {
-  getConsultants, getResultsFor, getTargets, getManagerNote,
+  Search, Flame, Check, Minus, X as XIcon, AlertTriangle, ChevronDown,
+  FileSpreadsheet, User, ShieldAlert, Target,
+} from 'lucide-react'
+import {
+  getConsultants, getResultsFor, getManagerNote,
   getManagers, getADs, FISCAL_MONTHS,
 } from '../../kpi/data/kpiData.js'
 import {
@@ -13,37 +14,59 @@ import {
   meetsStreak, monthScored, quarterScored, monthHasData, quarterHasData,
 } from '../../kpi/scoring.js'
 
-// Status → colour. Arena palette: hit = brand orange, near = amber,
-// miss = coral, N/A & not-scored = muted grey.
+// Status is a RESERVED palette (not categorical): each state ships with an icon
+// + label, never colour alone. Values/labels stay in ink tokens; colour lives
+// on the mark (meter fill, chip tint, cell tint).
 const STATUS = {
-  hit:   { color: '#F75C03', label: 'Hit' },
-  near:  { color: '#ffc800', label: 'Near miss' },
-  miss:  { color: '#ff4b4b', label: 'Missed' },
-  na:    { color: '#8e8ea0', label: 'N/A' },
-  empty: { color: '#8e8ea0', label: '—' },
+  hit:   { color: '#F75C03', label: 'Hit',    Icon: Check },
+  near:  { color: '#E0A400', label: 'Near',   Icon: AlertTriangle },
+  miss:  { color: '#E5484D', label: 'Missed', Icon: XIcon },
+  na:    { color: '#8A8F9C', label: 'N/A',    Icon: Minus },
+  empty: { color: '#8A8F9C', label: '—',      Icon: Minus },
 }
 
 const KPI_META = {
-  1: { short: 'K1', name: 'YTD target by value',        unit: '%' },
-  2: { short: 'K2', name: 'Planned accounts delivered', unit: '%' },
-  3: { short: 'K3', name: 'Invoiced in first 15 days',  unit: '%' },
-  4: { short: 'K4', name: 'Recurring retention',        unit: '%' },
-  5: { short: 'K5', name: 'Recurring conversion <9mo',  unit: '%' },
-  6: { short: 'K6', name: 'New business <60 days',      unit: '%' },
+  1: { short: 'K1', name: 'YTD target by value' },
+  2: { short: 'K2', name: 'Planned accounts delivered' },
+  3: { short: 'K3', name: 'Invoiced in first 15 days' },
+  4: { short: 'K4', name: 'Recurring retention' },
+  5: { short: 'K5', name: 'Recurring conversion < 9mo' },
+  6: { short: 'K6', name: 'New business < 60 days' },
 }
 
-const pct = (r) => (r == null ? '—' : `${(r * 100).toFixed(1)}%`)
-const money = (v) => (v == null ? '—' : v.toLocaleString('en-GB', { maximumFractionDigits: 2 }))
+const pct = (r, dp = 1) => (r == null ? '—' : `${(r * 100).toFixed(dp)}%`)
+const money = (v) => (v == null ? '—' : v.toLocaleString('en-GB', { maximumFractionDigits: 0 }))
 const initials = (name = '') => name.split(/[\s-]+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 
 function avatarColor(name) {
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  const hue = h % 360
-  return `hsl(${hue} 55% 42%)`
+  return `hsl(${h % 360} 52% 45%)`
 }
 
 const EASE = [0.22, 1, 0.36, 1]
+
+// Count-up that animates on mount (not gated by scroll/in-view), so KPI values
+// are always correct even below the fold — unlike an IntersectionObserver gate.
+function CountUp({ value = 0, duration = 0.8, format = (v) => Math.round(v) }) {
+  const [v, setV] = useState(value)
+  const fromRef = useRef(0)
+  useEffect(() => {
+    const from = fromRef.current
+    const start = performance.now()
+    let raf
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / (duration * 1000))
+      const eased = 1 - Math.pow(1 - t, 3)
+      setV(from + (value - from) * eased)
+      if (t < 1) raf = requestAnimationFrame(tick)
+      else fromRef.current = value
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return <>{format(v)}</>
+}
 
 export default function ConsultantPerformanceDashboard() {
   const consultants = useMemo(() => getConsultants(), [])
@@ -51,7 +74,7 @@ export default function ConsultantPerformanceDashboard() {
   const ads = useMemo(() => getADs(), [])
 
   const [query, setQuery] = useState('')
-  const [cat, setCat] = useState('All')        // All | TC | FC
+  const [cat, setCat] = useState('All')
   const [manager, setManager] = useState('All')
   const [ad, setAd] = useState('All')
   const [selected, setSelected] = useState(consultants[0]?.name ?? null)
@@ -68,19 +91,13 @@ export default function ConsultantPerformanceDashboard() {
 
   return (
     <div className="space-y-6 xl:space-y-8">
-      <motion.header
-        className="relative flex flex-col gap-3 overflow-hidden"
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}
-      >
-        {/* soft brand glow behind the title */}
-        <div className="pointer-events-none absolute -top-24 -left-16 h-56 w-56 rounded-full opacity-30 blur-3xl"
+      <motion.header className="relative flex flex-col gap-3 overflow-hidden"
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
+        <div className="pointer-events-none absolute -top-24 -left-16 h-56 w-56 rounded-full opacity-25 blur-3xl"
           style={{ background: 'radial-gradient(circle, #F75C03, transparent 70%)' }} />
         <div className="flex items-center gap-3">
-          <motion.div
-            className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber"
-            initial={{ rotate: -8, scale: 0.8 }} animate={{ rotate: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-          >
+          <motion.div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber"
+            initial={{ rotate: -8, scale: 0.8 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
             <User className="text-arena-amber" size={24} strokeWidth={2.4} />
           </motion.div>
           <span className="arena-chip bg-arena-surface2 text-arena-muted inline-flex items-center gap-1.5">
@@ -91,22 +108,17 @@ export default function ConsultantPerformanceDashboard() {
           <span className="text-arena-amber">Consultant Performance</span> Dashboard
         </h1>
         <p className="text-arena-muted max-w-2xl">
-          Six KPIs across the fiscal year. KPIs 1–3 are monthly; 4–6 are quarterly.
-          A point is earned when a KPI clears its threshold. Monthly scoring starts in September,
-          quarterly from Q2 — earlier periods show greyed as “not scored”.
+          Six KPIs across the fiscal year — three monthly, three quarterly. A point is earned when a KPI
+          clears its threshold. Monthly scoring starts in September, quarterly from Q2.
         </p>
       </motion.header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 xl:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 xl:gap-6">
         <Roster
-          rows={filtered}
-          selected={selected}
-          onSelect={setSelected}
-          query={query} onQuery={setQuery}
-          cat={cat} onCat={setCat}
+          rows={filtered} selected={selected} onSelect={setSelected}
+          query={query} onQuery={setQuery} cat={cat} onCat={setCat}
           manager={manager} onManager={setManager} managers={managers}
-          ad={ad} onAd={setAd} ads={ads}
-          total={consultants.length}
+          ad={ad} onAd={setAd} ads={ads} total={consultants.length}
         />
         <AnimatePresence mode="wait">
           {selected
@@ -119,74 +131,47 @@ export default function ConsultantPerformanceDashboard() {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Roster (unchanged layout; list was fine) ────────────────────────────────
 function Roster({ rows, selected, onSelect, query, onQuery, cat, onCat, manager, onManager, managers, ad, onAd, ads, total }) {
   return (
     <aside className="arena-card p-3 lg:sticky lg:top-4 self-start">
       <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-arena-bg/60 border border-arena-border focus-within:border-arena-amber/60 transition-colors">
         <Search size={15} className="text-arena-muted shrink-0" />
-        <input
-          value={query}
-          onChange={(e) => onQuery(e.target.value)}
-          placeholder="Search consultants…"
-          className="flex-1 bg-transparent text-sm text-arena-ink placeholder:text-arena-muted focus:outline-none font-display font-bold"
-        />
+        <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Search consultants…"
+          className="flex-1 bg-transparent text-sm text-arena-ink placeholder:text-arena-muted focus:outline-none font-display font-bold" />
       </div>
-
-      <div className="mt-2 flex items-center gap-1.5">
-        <Seg value={cat} onChange={onCat} options={['All', 'TC', 'FC']} />
-      </div>
+      <div className="mt-2"><Seg value={cat} onChange={onCat} options={['All', 'TC', 'FC']} /></div>
       <div className="mt-2 grid grid-cols-2 gap-1.5">
         <Picker value={manager} onChange={onManager} options={managers} allLabel="All managers" />
         <Picker value={ad} onChange={onAd} options={ads} allLabel="All ADs" />
       </div>
-
-      <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold px-1">
-        {rows.length} of {total}
-      </div>
-
-      <ul className="mt-1 max-h-[62vh] overflow-y-auto pr-1 space-y-1">
+      <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold px-1">{rows.length} of {total}</div>
+      <ul className="mt-1 max-h-[64vh] overflow-y-auto pr-1 space-y-1">
         <AnimatePresence initial={false} mode="popLayout">
           {rows.map((c, i) => {
             const active = c.name === selected
             return (
-              <motion.li
-                key={c.name}
-                layout
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.18, delay: Math.min(i * 0.012, 0.25), ease: EASE }}
-              >
-                <button
-                  onClick={() => onSelect(c.name)}
-                  className="relative w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-colors hover:bg-arena-surface2/60"
-                >
-                  {active && (
-                    <motion.span
-                      layoutId="roster-active"
-                      className="absolute inset-0 rounded-xl bg-arena-amber/15 ring-1 ring-inset ring-arena-amber/40"
-                      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                    />
-                  )}
-                  <span className="relative h-8 w-8 rounded-lg grid place-items-center text-[11px] font-display font-black text-white shrink-0 shadow-sm"
+              <motion.li key={c.name} layout
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.18, delay: Math.min(i * 0.012, 0.25), ease: EASE }}>
+                <button onClick={() => onSelect(c.name)}
+                  className="relative w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-colors hover:bg-arena-surface2/60">
+                  {active && <motion.span layoutId="roster-active" className="absolute inset-0 rounded-xl bg-arena-amber/15 ring-1 ring-inset ring-arena-amber/40"
+                    transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+                  <span className="relative h-8 w-8 rounded-lg grid place-items-center text-[11px] font-display font-black text-white shrink-0"
                     style={{ background: avatarColor(c.name), boxShadow: active ? '0 0 0 2px rgba(255,200,0,0.5)' : undefined }}>
                     {initials(c.name)}
                   </span>
                   <span className="relative min-w-0 flex-1">
                     <span className="block text-sm font-display font-bold text-arena-ink truncate">{c.name}</span>
-                    <span className="block text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold truncate">
-                      {c.category} · {c.manager}
-                    </span>
+                    <span className="block text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold truncate">{c.category} · {c.manager}</span>
                   </span>
                 </button>
               </motion.li>
             )
           })}
         </AnimatePresence>
-        {rows.length === 0 && (
-          <li className="px-3 py-8 text-center text-sm text-arena-muted">No consultants match those filters.</li>
-        )}
+        {rows.length === 0 && <li className="px-3 py-8 text-center text-sm text-arena-muted">No consultants match those filters.</li>}
       </ul>
     </aside>
   )
@@ -222,7 +207,7 @@ function Picker({ value, onChange, options, allLabel }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Detail ──────────────────────────────────────────────────────────────────
 function Detail({ name }) {
   const consultant = useMemo(() => getConsultants().find((c) => c.name === name), [name])
   const results = useMemo(() => getResultsFor(name), [name])
@@ -235,75 +220,84 @@ function Detail({ name }) {
   const monthMeta = FISCAL_MONTHS.find((m) => m.period === month) ?? FISCAL_MONTHS[0]
   const quarter = monthMeta.quarter
 
-  const container = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
-  }
-  const item = {
-    hidden: { opacity: 0, y: 14 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
-  }
+  // Period KPI evaluations.
+  const monthlyEvals = [1, 2, 3].map((k) => ({ kpi: k, periodType: 'month', period: month, fiscalMonth: month, r: results[`month:${month}:${k}`], sc: scoreMonthlyKpi(k, results[`month:${month}:${k}`], month), scored: monthScored(month) }))
+  const quarterlyEvals = [4, 5, 6].map((k) => ({ kpi: k, periodType: 'quarter', period: quarter, r: results[`quarter:${quarter}:${k}`], sc: scoreQuarterlyKpi(k, results[`quarter:${quarter}:${k}`]), scored: quarterScored(quarter) }))
+  const allEvals = [...monthlyEvals, ...quarterlyEvals]
+  const hits = allEvals.filter((e) => e.sc.status === 'hit').length
+  const assessable = allEvals.filter((e) => e.sc.status !== 'na' && e.sc.status !== 'empty').length
 
   const mPts = monthHasData(results, month) ? monthlyPoints(results, month) : null
   const mVerdict = monthlyVerdict(results, month)
   const qPts = quarterHasData(results, quarter) ? quarterPoints(results, quarter) : null
   const qVerdict = quarterlyVerdict(results, quarter)
 
+  const container = { hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } } }
+  const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } } }
+
   return (
-    <motion.div
-      className="space-y-5"
-      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35, ease: EASE }}
-    >
-      {/* Header */}
-      <motion.div className="arena-card p-5 flex flex-col md:flex-row md:items-center gap-4"
-        variants={item} initial="hidden" animate="show">
-        <div className="flex items-center gap-3">
-          <motion.span className="h-14 w-14 rounded-2xl grid place-items-center text-base font-display font-black text-white shrink-0"
-            style={{ background: avatarColor(name) }}
-            initial={{ scale: 0.7, rotate: -6 }} animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
-            {initials(name)}
-          </motion.span>
-          <div>
-            <div className="font-display font-black text-arena-ink text-2xl leading-tight">{name}</div>
-            <div className="text-xs text-arena-muted font-display font-bold uppercase tracking-[0.16em]">
-              {consultant?.category} · Mgr {consultant?.manager} · AD {consultant?.ad}
+    <motion.div className="space-y-5"
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35, ease: EASE }}>
+
+      {/* Identity + hero scorecard */}
+      <motion.div className="arena-card p-5 md:p-6" variants={item} initial="hidden" animate="show">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-5">
+          <div className="flex items-center gap-3 min-w-0">
+            <motion.span className="h-14 w-14 rounded-2xl grid place-items-center text-base font-display font-black text-white shrink-0"
+              style={{ background: avatarColor(name) }} initial={{ scale: 0.7, rotate: -6 }} animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 16 }}>{initials(name)}</motion.span>
+            <div className="min-w-0">
+              <div className="font-display font-black text-arena-ink text-2xl leading-tight truncate">{name}</div>
+              <div className="text-xs text-arena-muted font-display font-bold uppercase tracking-[0.16em] truncate">
+                {consultant?.category} · Mgr {consultant?.manager} · AD {consultant?.ad}
+              </div>
+              <div className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-display font-black text-arena-ink">
+                <motion.span animate={{ scale: streak > 0 ? [1, 1.18, 1] : 1 }} transition={{ duration: 1.4, repeat: streak > 0 ? Infinity : 0 }}>
+                  <Flame size={14} className="text-accent-coral" strokeWidth={2.6} />
+                </motion.span>
+                {streak}<span className="text-arena-muted font-bold">-month meets-expectation streak</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Hero figure — KPIs hit this period */}
+          <div className="lg:ml-auto flex items-center gap-5">
+            <div className="text-right">
+              <div className="font-display font-black text-arena-ink leading-none" style={{ fontSize: '3.25rem' }}>
+                <CountUp value={hits} duration={0.7} format={(v) => Math.round(v)} />
+                <span className="text-arena-muted text-2xl font-bold">/6</span>
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold mt-1">
+                KPIs hit · {monthMeta.label} + Q{quarter}
+              </div>
+            </div>
+            <div className="h-14 w-px bg-arena-border hidden sm:block" />
+            <div className="grid grid-cols-2 gap-2">
+              <ScoreTile label={`${monthMeta.label} points`} pts={mPts} verdict={mVerdict} scored={monthScored(month)} />
+              <ScoreTile label={`Q${quarter} points`} pts={qPts} verdict={qVerdict} scored={quarterScored(quarter)} />
             </div>
           </div>
         </div>
-        <div className="md:ml-auto flex items-center gap-2">
-          <motion.span
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-arena-bg/60 border border-arena-border text-sm font-display font-black text-arena-ink"
-            whileHover={{ scale: 1.04 }}
-          >
-            <motion.span animate={{ scale: streak > 0 ? [1, 1.18, 1] : 1 }} transition={{ duration: 1.4, repeat: streak > 0 ? Infinity : 0 }}>
-              <Flame size={15} className="text-accent-coral" strokeWidth={2.6} />
-            </motion.span>
-            {streak}<span className="text-arena-muted font-bold text-xs">mo streak</span>
-          </motion.span>
-        </div>
+
+        <AnimatePresence>
+          {note && (
+            <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 16 }} exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              className="rounded-xl bg-arena-amber/10 ring-1 ring-inset ring-arena-amber/30 p-3 flex items-start gap-2.5 overflow-hidden">
+              <ShieldAlert size={15} className="text-arena-amber mt-0.5 shrink-0" />
+              <div className="text-sm text-arena-ink/90"><span className="font-display font-black">Manager note · </span>{note}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
-      <AnimatePresence>
-        {note && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="arena-card p-4 ring-1 ring-inset ring-arena-amber/30 flex items-start gap-2.5 overflow-hidden">
-            <ShieldAlert size={16} className="text-arena-amber mt-0.5 shrink-0" />
-            <div className="text-sm text-arena-ink/90"><span className="font-display font-black">Manager note · </span>{note}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Month picker + summary hero */}
+      {/* Controls row: period + legend (one row above the charts) */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold">Period</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold mr-1">Period</span>
         {dataMonths.map((m) => {
           const active = m.period === month
           return (
             <button key={m.period} onClick={() => setMonth(m.period)}
-              className={['relative px-3 py-1.5 rounded-full text-xs font-display font-bold transition-colors',
+              className={['relative px-3.5 py-1.5 rounded-full text-xs font-display font-bold transition-colors',
                 active ? 'text-arena-bg' : 'bg-arena-bg/70 border border-arena-border text-arena-muted hover:text-arena-ink'].join(' ')}>
               {active && <motion.span layoutId="month-pill" className="absolute inset-0 rounded-full bg-arena-amber shadow-glow-amber" transition={{ type: 'spring', stiffness: 480, damping: 36 }} />}
               <span className="relative">{m.label} 2026</span>
@@ -313,280 +307,222 @@ function Detail({ name }) {
         <Legend />
       </div>
 
-      <SummaryHero month={month} monthMeta={monthMeta} quarter={quarter}
-        mPts={mPts} mVerdict={mVerdict} qPts={qPts} qVerdict={qVerdict}
-        scoredMonth={monthScored(month)} scoredQuarter={quarterScored(quarter)} />
-
-      {/* 6 KPI rings */}
-      <section>
-        <h2 className="font-display font-black text-arena-ink text-lg mb-3">
-          {monthMeta.label} snapshot · KPIs 1–3 monthly, 4–6 quarter-to-date (Q{quarter})
-        </h2>
-        <motion.div className="grid grid-cols-2 md:grid-cols-3 gap-3"
-          variants={container} initial="hidden" animate="show" key={`${name}-${month}`}>
-          {[1, 2, 3].map((kpi) => (
-            <KpiRingCard key={kpi} kpi={kpi} periodType="month" period={month} fiscalMonth={month} results={results} scored={monthScored(month)} variants={item} />
+      {/* KPI meters */}
+      <motion.section variants={container} initial="hidden" animate="show" key={`${name}-${month}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {allEvals.map((e) => (
+            <KpiMeterCard key={e.kpi} e={e} variants={item} />
           ))}
-          {[4, 5, 6].map((kpi) => (
-            <KpiRingCard key={kpi} kpi={kpi} periodType="quarter" period={quarter} results={results} scored={quarterScored(quarter)} variants={item} />
-          ))}
-        </motion.div>
-      </section>
+        </div>
+      </motion.section>
 
-      <MonthlyGrid results={results} />
-      <QuarterlyGrid results={results} />
+      {/* Heatmaps */}
+      <HeatmapSection title="Monthly KPIs 1–3" kpis={[1, 2, 3]} cols={FISCAL_MONTHS}
+        colKey={(m) => `month:${m.period}:`} colLabel={(m) => m.label} colScored={(m) => monthScored(m.period)}
+        score={(k, r, m) => scoreMonthlyKpi(k, r, m.period)} results={results}
+        pointsRow={FISCAL_MONTHS.map((m) => ({ has: monthHasData(results, m.period), pts: monthHasData(results, m.period) ? monthlyPoints(results, m.period) : null, scored: monthScored(m.period), verdict: monthlyVerdict(results, m.period) }))} />
+
+      <HeatmapSection title="Quarterly KPIs 4–6" kpis={[4, 5, 6]} cols={[1, 2, 3, 4].map((q) => ({ q }))}
+        colKey={(c) => `quarter:${c.q}:`} colLabel={(c) => `Q${c.q}`} colScored={(c) => quarterScored(c.q)}
+        score={(k, r) => scoreQuarterlyKpi(k, r)} results={results}
+        pointsRow={[1, 2, 3, 4].map((q) => ({ has: quarterHasData(results, q), pts: quarterHasData(results, q) ? quarterPoints(results, q) : null, scored: quarterScored(q), verdict: quarterlyVerdict(results, q) }))} />
+
+      {/* Trends */}
       <TrendStrip results={results} />
     </motion.div>
   )
 }
 
-function Legend() {
-  const items = [['hit', 'Hit'], ['near', 'Near'], ['miss', 'Miss'], ['na', 'N/A']]
+// ─── Hero sub-tiles ──────────────────────────────────────────────────────────
+function ScoreTile({ label, pts, verdict, scored }) {
+  const vs = VERDICT_STYLE[verdict.kind] ?? VERDICT_STYLE.empty
   return (
-    <div className="ml-auto hidden sm:flex items-center gap-2.5 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">
-      {items.map(([k, label]) => (
-        <span key={k} className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full" style={{ background: STATUS[k].color }} />{label}
-        </span>
-      ))}
+    <div className="rounded-xl bg-arena-bg/50 border border-arena-border px-3 py-2 min-w-[120px]">
+      <div className="text-[9px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{label}</div>
+      <div className="mt-0.5 flex items-center gap-2">
+        <span className="font-display font-black text-arena-ink text-xl tabular-nums">{pts == null ? '—' : pts}<span className="text-arena-muted text-xs font-bold">/3</span></span>
+        <Pips n={pts ?? 0} dim={!scored} />
+      </div>
+      <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-display font-black" style={{ color: scored ? vs.color : '#8A8F9C' }}>
+        <vs.Icon size={10} strokeWidth={3} />{scored ? vs.label : 'Not scored'}
+      </div>
     </div>
   )
 }
 
-function SummaryHero({ monthMeta, quarter, mPts, mVerdict, qPts, qVerdict, scoredMonth, scoredQuarter }) {
+function Legend() {
   return (
-    <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE }}
-    >
-      <SummaryTile label={`${monthMeta.label} · monthly`} pts={mPts} verdict={mVerdict} scored={scoredMonth} max={3} />
-      <SummaryTile label={`Q${quarter} · quarter-to-date`} pts={qPts} verdict={qVerdict} scored={scoredQuarter} max={3} />
+    <div className="ml-auto flex items-center gap-3 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">
+      {['hit', 'near', 'miss', 'na'].map((k) => {
+        const s = STATUS[k]
+        return (
+          <span key={k} className="inline-flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: s.color }} />{s.label}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── KPI meter card (replaces the ring) ──────────────────────────────────────
+function KpiMeterCard({ e, variants }) {
+  const { kpi, r, sc, scored } = e
+  const meta = KPI_META[kpi]
+  const thr = kpiThreshold(kpi)
+  const cap = kpi === 2 ? KPI2_CAP : null
+  const s = STATUS[scored ? sc.status : 'na']
+  const statusKey = scored ? sc.status : 'na'
+
+  return (
+    <motion.div variants={variants} whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+      className="arena-card p-4 flex flex-col gap-3">
+      {/* header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short}</div>
+          <div className="font-display font-bold text-arena-ink text-sm leading-tight">{meta.name}</div>
+        </div>
+        <StatusChip statusKey={statusKey} scored={scored} />
+      </div>
+
+      {/* value */}
+      <div className="flex items-end justify-between gap-2">
+        <div className="font-display font-black text-arena-ink leading-none" style={{ fontSize: '1.9rem' }}>
+          {sc.status === 'na' ? 'N/A'
+            : sc.ratio == null ? '—'
+            : <CountUp value={sc.ratio * 100} duration={0.9} format={(v) => `${v.toFixed(1)}%`} />}
+        </div>
+        <div className="text-[11px] text-arena-muted tabular-nums text-right leading-tight">
+          {r ? <>n {money(r.numerator)}<br />d {money(r.denominator)}</> : 'no data'}
+        </div>
+      </div>
+
+      {/* meter */}
+      <Meter kpi={kpi} ratio={sc.ratio} status={statusKey} scored={scored} thr={thr} cap={cap} />
+
+      <div className="flex items-center justify-between text-[10px] text-arena-muted font-display font-bold">
+        <span className="inline-flex items-center gap-1"><Target size={10} /> Target {Math.round(thr * 100)}%{cap ? `–${Math.round(cap * 100)}%` : ''}</span>
+        {!scored && <span className="uppercase tracking-wider">Not scored</span>}
+      </div>
     </motion.div>
   )
 }
 
-function SummaryTile({ label, pts, verdict, scored, max }) {
-  const vs = VERDICT_STYLE[verdict.kind] ?? VERDICT_STYLE.empty
+function StatusChip({ statusKey, scored }) {
+  const s = STATUS[statusKey]
+  const label = scored ? s.label : 'Not scored'
   return (
-    <div className="arena-card p-4 flex items-center gap-4 overflow-hidden relative">
-      <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl"
-        style={{ background: scored ? vs.color : '#8e8ea0' }} />
-      <div className="relative">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold">{label}</div>
-        <div className="mt-0.5 font-display font-black text-arena-ink text-3xl leading-none tabular-nums">
-          {pts == null ? '—' : <AnimatedCounter value={pts} duration={0.7} format={(v) => Math.round(v)} />}
-          <span className="text-arena-muted text-lg font-bold">/{max}</span>
-        </div>
-      </div>
-      <div className="relative ml-auto flex flex-col items-end gap-1.5">
-        <BigPips n={pts ?? 0} dim={!scored} max={max} />
-        <span className="text-[10px] uppercase tracking-wider font-display font-black" style={{ color: scored ? vs.color : '#8e8ea0' }}>
-          {scored ? vs.label : 'Not scored'}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function BigPips({ n, dim, max = 3 }) {
-  return (
-    <span className="inline-flex gap-1">
-      {Array.from({ length: max }).map((_, i) => (
-        <motion.span key={i} className="h-2.5 w-6 rounded-full"
-          initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: dim ? 0.4 : 1 }}
-          transition={{ delay: 0.1 + i * 0.08, duration: 0.3, ease: EASE }}
-          style={{ transformOrigin: 'left', background: i < n ? '#F75C03' : 'rgba(255,255,255,0.12)' }} />
-      ))}
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-display font-black shrink-0"
+      style={{ background: `${s.color}1f` }}>
+      <s.Icon size={11} strokeWidth={3} style={{ color: s.color }} />
+      <span className="text-arena-ink">{label}</span>
     </span>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-function KpiRingCard({ kpi, periodType, period, fiscalMonth, results, scored, variants }) {
-  const r = results[`${periodType}:${period}:${kpi}`]
-  const sc = periodType === 'month'
-    ? scoreMonthlyKpi(kpi, r, fiscalMonth)
-    : scoreQuarterlyKpi(kpi, r)
-  const meta = KPI_META[kpi]
-  const thr = kpiThreshold(kpi)
-  const color = scored ? STATUS[sc.status]?.color ?? STATUS.empty.color : '#8e8ea0'
-  const ratio = sc.ratio
-  const ringRatio = ratio == null ? 0 : Math.min(1, ratio / (kpi === 2 ? KPI2_CAP : 1))
-  const isHit = scored && sc.point === 1
-
+// Meter: track (lighter step) + fill (status colour) + threshold tick. For KPI2
+// the accepted band [0.8, 1.2] is shaded and the upper cap gets its own tick.
+function Meter({ kpi, ratio, status, scored, thr, cap }) {
+  const scaleMax = cap ? 1.35 : 1.2
+  const color = scored ? STATUS[status].color : '#8A8F9C'
+  const fillPct = ratio == null ? 0 : Math.max(0, Math.min(1, ratio / scaleMax)) * 100
+  const thrPct = (thr / scaleMax) * 100
+  const capPct = cap ? (cap / scaleMax) * 100 : null
   return (
-    <motion.div
-      variants={variants}
-      whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      className="arena-card p-4 flex items-center gap-4 relative overflow-hidden"
-      style={isHit ? { boxShadow: `0 10px 34px -18px ${color}` } : undefined}
-    >
-      {isHit && (
-        <div className="pointer-events-none absolute -left-6 -bottom-6 h-20 w-20 rounded-full opacity-25 blur-2xl" style={{ background: color }} />
+    <div className="relative h-3 rounded-full bg-arena-surface2 overflow-hidden">
+      {/* accepted band for KPI2 */}
+      {cap && (
+        <div className="absolute inset-y-0" style={{ left: `${thrPct}%`, width: `${capPct - thrPct}%`, background: '#F75C0314' }} />
       )}
-      <div className="relative">
-        <ProgressRing ratio={ringRatio} size={84} stroke={8} color={color} pulse={isHit}>
-          <div className="text-center">
-            <div className="font-display font-black text-arena-ink text-base leading-none tabular-nums">
-              {sc.status === 'na' ? 'N/A'
-                : ratio == null ? '—'
-                : <AnimatedCounter value={ratio * 100} duration={0.9} format={(v) => `${v.toFixed(1)}%`} />}
-            </div>
-            {isHit && (
-              <motion.span className="mt-1 inline-grid place-items-center"
-                initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.5 }}>
-                <Check size={14} style={{ color }} strokeWidth={3} />
-              </motion.span>
-            )}
-          </div>
-        </ProgressRing>
-      </div>
-      <div className="min-w-0 relative">
-        <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short}</div>
-        <div className="font-display font-bold text-arena-ink text-sm leading-tight">{meta.name}</div>
-        <div className="mt-1 text-[11px] text-arena-muted tabular-nums" title={ratio == null ? '' : `ratio ${ratio}`}>
-          {r ? <>n {money(r.numerator)} / d {money(r.denominator)}</> : 'no data'}
-        </div>
-        <div className="mt-1 text-[10px] uppercase tracking-wider font-display font-bold" style={{ color }}>
-          {!scored ? 'Not scored' : `${STATUS[sc.status]?.label ?? '—'} · thr ${Math.round(thr * 100)}%${kpi === 2 ? '–120%' : ''}`}
-        </div>
-      </div>
-    </motion.div>
+      {/* fill */}
+      <motion.div className="absolute inset-y-0 left-0 rounded-full"
+        initial={{ width: 0 }} animate={{ width: `${fillPct}%` }} transition={{ duration: 0.8, ease: EASE }}
+        style={{ background: color, opacity: scored ? 1 : 0.5 }} />
+      {/* threshold tick */}
+      <span className="absolute inset-y-0 w-[2px] bg-arena-ink/70" style={{ left: `calc(${thrPct}% - 1px)` }} title={`Target ${Math.round(thr * 100)}%`} />
+      {cap && <span className="absolute inset-y-0 w-[2px] bg-arena-ink/40" style={{ left: `calc(${capPct}% - 1px)` }} title={`Cap ${Math.round(cap * 100)}%`} />}
+    </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-function Cell({ sc, scored }) {
+// ─── Heatmap ─────────────────────────────────────────────────────────────────
+function HeatmapSection({ title, kpis, cols, colKey, colLabel, colScored, score, results, pointsRow }) {
+  return (
+    <section>
+      <h2 className="font-display font-black text-arena-ink text-lg mb-3">{title}</h2>
+      <div className="arena-card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse" style={{ minWidth: cols.length > 6 ? 680 : 420 }}>
+            <thead>
+              <tr>
+                <th className="sticky left-0 z-10 bg-arena-surface text-left px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold">KPI</th>
+                {cols.map((c, i) => (
+                  <th key={i} className={['px-1 py-2 text-center text-[10px] uppercase tracking-[0.12em] font-display font-bold',
+                    colScored(c) ? 'text-arena-muted' : 'text-arena-muted/40'].join(' ')}>{colLabel(c)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {kpis.map((k, ri) => (
+                <motion.tr key={k} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: ri * 0.05, duration: 0.3, ease: EASE }}>
+                  <td className="sticky left-0 z-10 bg-arena-surface px-3 py-1.5 whitespace-nowrap">
+                    <span className="text-xs font-display font-bold text-arena-ink">{KPI_META[k].short}</span>
+                    <span className="hidden sm:inline text-xs text-arena-muted"> · {KPI_META[k].name}</span>
+                  </td>
+                  {cols.map((c, ci) => {
+                    const r = results[`${colKey(c)}${k}`]
+                    const sc = r ? score(k, r, c) : null
+                    return <HeatCell key={ci} sc={sc} scored={colScored(c)} kpi={k} label={colLabel(c)} />
+                  })}
+                </motion.tr>
+              ))}
+              {/* points + verdict footer */}
+              <tr className="border-t border-arena-border">
+                <td className="sticky left-0 z-10 bg-arena-surface px-3 py-2 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">Points</td>
+                {pointsRow.map((p, i) => (
+                  <td key={i} className="px-1 py-2 align-top">
+                    {p.has ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <Pips n={p.pts} dim={!p.scored} />
+                        <VerdictTag v={p.verdict} scored={p.scored} />
+                      </div>
+                    ) : <div className="text-center text-arena-muted/30">·</div>}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function HeatCell({ sc, scored, kpi, label }) {
   if (!sc || sc.status === 'empty') {
-    return <td className="px-1.5 py-1.5 text-center text-arena-muted/40">·</td>
+    return <td className="p-1"><div className="h-9 rounded-md grid place-items-center text-arena-muted/25">·</div></td>
   }
-  const color = scored ? STATUS[sc.status].color : '#8e8ea0'
-  const bg = scored ? `${color}1f` : 'transparent'
+  const s = STATUS[sc.status]
+  const tint = scored ? `${s.color}22` : 'transparent'
+  const ring = scored ? `inset 0 0 0 1px ${s.color}44` : `inset 0 0 0 1px rgb(var(--arena-border-rgb))`
   return (
-    <td className="px-1 py-1 text-center">
-      <motion.span
-        className="inline-block min-w-[46px] px-1.5 py-1 rounded-md text-[11px] font-display font-bold tabular-nums cursor-default"
-        style={{ background: bg, color: scored ? color : '#8e8ea0', opacity: scored ? 1 : 0.55 }}
-        whileHover={{ scale: 1.12, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        title={sc.ratio == null ? 'N/A' : `ratio ${sc.ratio}`}
+    <td className="p-1">
+      <motion.div
+        className="group relative h-9 rounded-md grid place-items-center cursor-default"
+        style={{ background: tint, boxShadow: ring, opacity: scored ? 1 : 0.5 }}
+        whileHover={{ scale: 1.06 }} transition={{ type: 'spring', stiffness: 400, damping: 22 }}
       >
-        {sc.status === 'na' ? 'N/A' : pct(sc.ratio)}
-      </motion.span>
+        <span className="text-[11px] font-display font-bold tabular-nums text-arena-ink">
+          {sc.status === 'na' ? 'N/A' : pct(sc.ratio, 0)}
+        </span>
+        {/* hover tooltip */}
+        <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap px-2 py-1 rounded-md text-[10px] font-display font-bold bg-arena-ink text-arena-bg opacity-0 group-hover:opacity-100 transition-opacity">
+          {KPI_META[kpi].short} · {label} · {sc.status === 'na' ? 'N/A' : pct(sc.ratio, 1)}{!scored ? ' · not scored' : ''}
+        </span>
+      </motion.div>
     </td>
-  )
-}
-
-const gridRow = {
-  hidden: { opacity: 0, x: -10 },
-  show: (i) => ({ opacity: 1, x: 0, transition: { delay: i * 0.05, duration: 0.3, ease: EASE } }),
-}
-
-function MonthlyGrid({ results }) {
-  const months = FISCAL_MONTHS
-  return (
-    <section>
-      <h2 className="font-display font-black text-arena-ink text-lg mb-3">Monthly KPIs 1–3</h2>
-      <div className="arena-card p-3 overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold">
-              <th className="text-left px-2 py-1.5">KPI</th>
-              {months.map((m) => (
-                <th key={m.period} className={['px-1 py-1.5 text-center', monthScored(m.period) ? '' : 'opacity-50'].join(' ')}>{m.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[1, 2, 3].map((kpi, idx) => (
-              <motion.tr key={kpi} className="border-t border-arena-border"
-                variants={gridRow} custom={idx} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }}>
-                <td className="px-2 py-1.5 text-xs font-display font-bold text-arena-ink whitespace-nowrap">{KPI_META[kpi].short} {KPI_META[kpi].name}</td>
-                {months.map((m) => {
-                  const r = results[`month:${m.period}:${kpi}`]
-                  const sc = r ? scoreMonthlyKpi(kpi, r, m.period) : null
-                  return <Cell key={m.period} sc={sc} scored={monthScored(m.period)} />
-                })}
-              </motion.tr>
-            ))}
-            <tr className="border-t border-arena-border bg-arena-surface2/30">
-              <td className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">Points / verdict</td>
-              {months.map((m) => {
-                const has = monthHasData(results, m.period)
-                const scored = monthScored(m.period)
-                const pts = has ? monthlyPoints(results, m.period) : null
-                const v = monthlyVerdict(results, m.period)
-                return (
-                  <td key={m.period} className="px-1 py-1.5 text-center align-top">
-                    {has ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <Pips n={pts} dim={!scored} />
-                        <VerdictDot v={v} />
-                      </div>
-                    ) : <span className="text-arena-muted/40">·</span>}
-                  </td>
-                )
-              })}
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )
-}
-
-function QuarterlyGrid({ results }) {
-  const quarters = [1, 2, 3, 4]
-  return (
-    <section>
-      <h2 className="font-display font-black text-arena-ink text-lg mb-3">Quarterly KPIs 4–6</h2>
-      <div className="arena-card p-3 overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold">
-              <th className="text-left px-2 py-1.5">KPI</th>
-              {quarters.map((q) => (
-                <th key={q} className={['px-2 py-1.5 text-center', quarterScored(q) ? '' : 'opacity-50'].join(' ')}>Q{q}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[4, 5, 6].map((kpi, idx) => (
-              <motion.tr key={kpi} className="border-t border-arena-border"
-                variants={gridRow} custom={idx} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }}>
-                <td className="px-2 py-1.5 text-xs font-display font-bold text-arena-ink whitespace-nowrap">{KPI_META[kpi].short} {KPI_META[kpi].name}</td>
-                {quarters.map((q) => {
-                  const r = results[`quarter:${q}:${kpi}`]
-                  const sc = r ? scoreQuarterlyKpi(kpi, r) : null
-                  return <Cell key={q} sc={sc} scored={quarterScored(q)} />
-                })}
-              </motion.tr>
-            ))}
-            <tr className="border-t border-arena-border bg-arena-surface2/30">
-              <td className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold">Points / verdict</td>
-              {quarters.map((q) => {
-                const has = quarterHasData(results, q)
-                const scored = quarterScored(q)
-                const pts = has ? quarterPoints(results, q) : null
-                const v = quarterlyVerdict(results, q)
-                return (
-                  <td key={q} className="px-2 py-1.5 text-center align-top">
-                    {has ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <Pips n={pts} dim={!scored} />
-                        <VerdictDot v={v} />
-                      </div>
-                    ) : <span className="text-arena-muted/40">·</span>}
-                  </td>
-                )
-              })}
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   )
 }
 
@@ -595,46 +531,43 @@ function Pips({ n, dim }) {
     <span className="inline-flex gap-0.5">
       {[0, 1, 2].map((i) => (
         <motion.span key={i} className="h-2 w-2 rounded-full"
-          initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
+          initial={{ scale: 0 }} animate={{ scale: 1 }}
           transition={{ delay: 0.05 * i, type: 'spring', stiffness: 500, damping: 18 }}
-          style={{ background: i < (n ?? 0) ? '#F75C03' : 'rgba(255,255,255,0.12)', opacity: dim ? 0.4 : 1 }} />
+          style={{ background: i < (n ?? 0) ? '#F75C03' : 'rgb(var(--arena-border-rgb))', opacity: dim ? 0.45 : 1 }} />
       ))}
     </span>
   )
 }
 
 const VERDICT_STYLE = {
-  meets:        { color: '#F75C03', label: 'Meets' },
-  below:        { color: '#ff4b4b', label: 'Below' },
-  review:       { color: '#ff4b4b', label: 'Review' },
-  'not-scored': { color: '#8e8ea0', label: 'Not scored' },
-  empty:        { color: '#8e8ea0', label: '—' },
+  meets:        { color: '#F75C03', label: 'Meets',      Icon: Check },
+  below:        { color: '#E5484D', label: 'Below',      Icon: XIcon },
+  review:       { color: '#E5484D', label: 'Review',     Icon: AlertTriangle },
+  'not-scored': { color: '#8A8F9C', label: 'Not scored', Icon: Minus },
+  empty:        { color: '#8A8F9C', label: '—',          Icon: Minus },
 }
-function VerdictDot({ v }) {
+function VerdictTag({ v, scored }) {
   const s = VERDICT_STYLE[v.kind] ?? VERDICT_STYLE.empty
   return (
-    <span className="text-[9px] uppercase tracking-wider font-display font-bold whitespace-nowrap" style={{ color: s.color }}>
-      {s.label}
+    <span className="inline-flex items-center gap-0.5 text-[9px] uppercase tracking-wider font-display font-black whitespace-nowrap" style={{ color: scored ? s.color : '#8A8F9C' }}>
+      <s.Icon size={9} strokeWidth={3} />{scored ? s.label : '—'}
     </span>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Trends — small multiples, one line each ─────────────────────────────────
 function TrendStrip({ results }) {
+  const monthly = [1, 2, 3].map((kpi) => ({
+    kpi, points: FISCAL_MONTHS.filter((m) => results[`month:${m.period}:${kpi}`]).map((m) => ({ label: m.label, ratio: results[`month:${m.period}:${kpi}`].ratio })),
+  }))
+  const quarterly = [4, 5, 6].map((kpi) => ({
+    kpi, points: [1, 2, 3, 4].filter((q) => results[`quarter:${q}:${kpi}`]).map((q) => ({ label: `Q${q}`, ratio: results[`quarter:${q}:${kpi}`].ratio })),
+  }))
   return (
     <section>
       <h2 className="font-display font-black text-arena-ink text-lg mb-3">Trends</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {[1, 2, 3].map((kpi) => (
-          <TrendCard key={kpi} kpi={kpi}
-            points={FISCAL_MONTHS.filter((m) => results[`month:${m.period}:${kpi}`])
-              .map((m) => ({ label: m.label, ratio: results[`month:${m.period}:${kpi}`].ratio }))} />
-        ))}
-        {[4, 5, 6].map((kpi) => (
-          <TrendCard key={kpi} kpi={kpi}
-            points={[1, 2, 3, 4].filter((q) => results[`quarter:${q}:${kpi}`])
-              .map((q) => ({ label: `Q${q}`, ratio: results[`quarter:${q}:${kpi}`].ratio }))} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {[...monthly, ...quarterly].map(({ kpi, points }) => <TrendCard key={kpi} kpi={kpi} points={points} />)}
       </div>
     </section>
   )
@@ -644,44 +577,52 @@ function TrendCard({ kpi, points }) {
   const meta = KPI_META[kpi]
   const thr = kpiThreshold(kpi)
   const cap = kpi === 2 ? KPI2_CAP : null
-  const W = 220, H = 70, padX = 8, padY = 10
-  const maxR = Math.max(1.2, cap ?? 1, ...points.map((p) => (p.ratio ?? 0)), thr) * 1.05
-  const x = (i) => padX + (points.length <= 1 ? (W - 2 * padX) / 2 : (i / (points.length - 1)) * (W - 2 * padX))
-  const y = (r) => H - padY - ((r ?? 0) / maxR) * (H - 2 * padY)
+  const W = 260, H = 96, padL = 10, padR = 34, padT = 12, padB = 22
+  const vals = points.map((p) => p.ratio ?? 0)
+  const maxR = Math.max(1.1, cap ?? 1, thr, ...vals) * 1.08
+  const x = (i) => padL + (points.length <= 1 ? (W - padL - padR) / 2 : (i / (points.length - 1)) * (W - padL - padR))
+  const y = (r) => H - padB - ((r ?? 0) / maxR) * (H - padT - padB)
   const line = points.map((p, i) => `${x(i)},${y(p.ratio)}`).join(' ')
-  const gid = `tg-${kpi}`
+  const last = points[points.length - 1]
+
   return (
     <motion.div className="arena-card p-3"
-      initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }}
-      transition={{ duration: 0.4, ease: EASE }} whileHover={{ y: -3 }}>
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: EASE }} whileHover={{ y: -2 }}>
       <div className="flex items-center justify-between mb-1">
-        <div className="text-xs font-display font-bold text-arena-ink">{meta.short} {meta.name}</div>
-        <div className="text-[10px] text-arena-muted font-display font-bold">thr {Math.round(thr * 100)}%</div>
+        <div className="text-xs font-display font-bold text-arena-ink truncate">{meta.short} · {meta.name}</div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[70px]">
-        <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#ffc800" />
-            <stop offset="100%" stopColor="#F75C03" />
-          </linearGradient>
-        </defs>
-        <line x1={padX} x2={W - padX} y1={y(thr)} y2={y(thr)} stroke="#8e8ea0" strokeWidth="1" strokeDasharray="3 3" />
-        {cap && <line x1={padX} x2={W - padX} y1={y(cap)} y2={y(cap)} stroke="#ff4b4b" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />}
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+        {/* baseline (hairline, solid, recessive) */}
+        <line x1={padL} x2={W - padR} y1={H - padB} y2={H - padB} stroke="rgb(var(--arena-border-rgb))" strokeWidth="1" />
+        {/* threshold reference (solid hairline + tag, never dashed) */}
+        <line x1={padL} x2={W - padR} y1={y(thr)} y2={y(thr)} stroke="#8A8F9C" strokeWidth="1" />
+        <text x={W - padR + 3} y={y(thr) + 3} fontSize="8" fontWeight="700" fill="#8A8F9C">{Math.round(thr * 100)}%</text>
+        {cap && <line x1={padL} x2={W - padR} y1={y(cap)} y2={y(cap)} stroke="#E5484D" strokeWidth="1" opacity="0.5" />}
+        {/* line */}
         {points.length > 1 && (
-          <motion.polyline points={line} fill="none" stroke={`url(#${gid})`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }} viewport={{ once: true }}
-            transition={{ duration: 0.9, ease: EASE }} />
+          <motion.polyline points={line} fill="none" stroke="#F75C03" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: EASE }} />
         )}
+        {/* markers with 2px surface ring */}
         {points.map((p, i) => (
-          <motion.circle key={i} cx={x(i)} cy={y(p.ratio)} r="3.5" fill="#F75C03"
-            initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
+          <motion.circle key={i} cx={x(i)} cy={y(p.ratio)} r="4" fill="#F75C03" stroke="rgb(var(--arena-surface-rgb))" strokeWidth="2"
+            initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ delay: 0.3 + i * 0.12, type: 'spring', stiffness: 500, damping: 16 }}
             style={{ transformBox: 'fill-box', transformOrigin: 'center' }} />
         ))}
+        {/* end value label only */}
+        {last && (
+          <text x={x(points.length - 1)} y={y(last.ratio) - 8} textAnchor="middle" fontSize="9" fontWeight="800" fill="rgb(var(--arena-ink-rgb))">
+            {pct(last.ratio, 0)}
+          </text>
+        )}
+        {/* x labels */}
+        {points.map((p, i) => (
+          <text key={i} x={x(i)} y={H - 7} textAnchor="middle" fontSize="8" fontWeight="700" fill="#8A8F9C">{p.label}</text>
+        ))}
+        {points.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize="9" fill="#8A8F9C">No data yet</text>}
       </svg>
-      <div className="flex justify-between text-[9px] text-arena-muted font-display font-bold">
-        {points.length ? points.map((p, i) => <span key={i}>{p.label}</span>) : <span>No data yet</span>}
-      </div>
     </motion.div>
   )
 }
