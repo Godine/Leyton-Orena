@@ -11,10 +11,9 @@ import { formatCurrencyCompact } from '../utils/formatters.js'
 import AnimatedCounter from '../components/shared/AnimatedCounter.jsx'
 import LocationPill from '../components/shared/LocationPill.jsx'
 import TrendArrow from '../components/shared/TrendArrow.jsx'
+import RoleScopePill from '../components/shared/RoleScopePill.jsx'
 import TrendsTab from '../components/manager/TrendsTab.jsx'
 import CurveTab from '../components/manager/CurveTab.jsx'
-
-const SCOPES = ['All', 'Technical', 'Financial']
 
 const STATUS_STYLE = {
   healthy: { dot: 'bg-accent-green', label: 'Healthy', text: 'text-accent-green' },
@@ -34,7 +33,7 @@ export default function Manager() {
   const roleView = useArenaStore((s) => s.roleView)
   const setCurrentUserId = useArenaStore((s) => s.setCurrentUserId)
 
-  const [scope, setScope] = useState('All')
+  const scope = roleView // the sidebar "View as" lens drives the whole page
   const [tab, setTab] = useState('overview')
 
   const insights = useMemo(
@@ -54,12 +53,11 @@ export default function Manager() {
               <span className="text-accent-green">Manager</span>
             </h1>
           </div>
-          <ScopeToggle value={scope} onChange={setScope} />
+          <RoleScopePill />
         </div>
         <p className="text-arena-muted max-w-2xl">
-          Team rollup for {monthLabel(insights.latest)} · {insights.totals.headcount} consultant
-          {insights.totals.headcount === 1 ? '' : 's'}{scope !== 'All' ? ` · ${scope}` : ''}.
-          Defaulting view is whole team; sidebar role is {roleView}.
+          {scope} team rollup for {monthLabel(insights.latest)} · {insights.totals.headcount} consultant
+          {insights.totals.headcount === 1 ? '' : 's'}. Flip “View as” to switch between Technical and Financial.
         </p>
       </header>
 
@@ -128,27 +126,6 @@ function ManagerTabs({ tab, onChange }) {
   )
 }
 
-function ScopeToggle({ value, onChange }) {
-  return (
-    <div className="inline-flex bg-arena-bg/70 border border-arena-border rounded-full p-1 text-xs font-display font-bold">
-      {SCOPES.map((s) => {
-        const active = s === value
-        return (
-          <button
-            key={s}
-            onClick={() => onChange(s)}
-            className={[
-              'px-3 py-1.5 rounded-full transition-colors',
-              active ? 'bg-accent-green text-arena-bg shadow-glow' : 'text-arena-muted hover:text-arena-ink',
-            ].join(' ')}
-          >
-            {s}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
 
 function KpiRow({ totals }) {
   const cards = [

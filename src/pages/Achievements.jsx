@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Award } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
+import { useRoleScope } from '../hooks/useRoleScope.js'
+import RoleScopePill from '../components/shared/RoleScopePill.jsx'
 import { RARITY_STYLES, BADGE_CATEGORIES, BADGES_BY_CATEGORY } from '../data/badges.js'
 import { closestToUnlock } from '../utils/badgeEligibility.js'
 import BadgeGrid from '../components/achievements/BadgeGrid.jsx'
@@ -15,7 +17,7 @@ const RARITIES = ['all', 'common', 'rare', 'epic', 'legendary', 'mythic']
 
 export default function Achievements() {
   const allBadges = useArenaStore((s) => s.badges)
-  const consultants = useArenaStore((s) => s.consultants)
+  const { scoped: consultants } = useRoleScope()
   const months = useArenaStore((s) => s.months)
   const currentUser = useArenaStore((s) => s.getCurrentUser())
   const hasSeenUnlock = useArenaStore((s) => s.hasSeenUnlock)
@@ -69,6 +71,7 @@ export default function Achievements() {
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber">
             <Award className="text-arena-amber" size={24} strokeWidth={2.4} />
           </div>
+          <RoleScopePill />
         </div>
         <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-arena-amber">Achievements</span>

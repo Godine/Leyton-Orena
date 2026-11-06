@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { Medal } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
+import { useRoleScope } from '../hooks/useRoleScope.js'
+import RoleScopePill from '../components/shared/RoleScopePill.jsx'
 import {
   computeRecords,
   isUnderThreat,
@@ -10,7 +12,7 @@ import RecordCard from '../components/records/RecordCard.jsx'
 import ThreatAlert from '../components/records/ThreatAlert.jsx'
 
 export default function Records() {
-  const consultants = useArenaStore((s) => s.consultants)
+  const { role, scoped: consultants } = useRoleScope()
   const months = useArenaStore((s) => s.months)
 
   const records = useMemo(() => computeRecords(consultants, months), [consultants, months])
@@ -32,12 +34,13 @@ export default function Records() {
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber">
             <Medal className="text-accent-coral" size={24} strokeWidth={2.4} />
           </div>
+          <RoleScopePill />
         </div>
         <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-accent-coral">Hall of Records</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">
-          All-time bests. Hold a record, get your name etched. Get close, and the holder feels it.
+          All-time bests among {role} consultants. Hold a record, get your name etched. Get close, and the holder feels it.
         </p>
       </header>
 

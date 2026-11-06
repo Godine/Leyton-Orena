@@ -21,6 +21,7 @@ export default function Home() {
   const consultants = useArenaStore((s) => s.consultants)
   const months = useArenaStore((s) => s.months)
   const allBadges = useArenaStore((s) => s.badges)
+  const roleView = useArenaStore((s) => s.roleView)
   const currentUser = useArenaStore((s) => s.getCurrentUser())
   const challenges = useChallengeStore((s) => s.challenges)
   const addNotification = useNotificationStore((s) => s.addNotification)
@@ -82,9 +83,14 @@ export default function Home() {
     [consultants],
   )
 
+  // Team-wide "records under threat" follows the active View-as lens.
+  const scopedConsultants = useMemo(
+    () => consultants.filter((c) => c.role === roleView),
+    [consultants, roleView],
+  )
   const threatenedRecords = useMemo(
-    () => computeRecords(consultants, months).filter(isUnderThreat).slice(0, 3),
-    [consultants, months],
+    () => computeRecords(scopedConsultants, months).filter(isUnderThreat).slice(0, 3),
+    [scopedConsultants, months],
   )
 
   // Fire a single welcome toast on first arrival in this session.

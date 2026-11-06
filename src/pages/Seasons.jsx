@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Crown, ArrowUp, ArrowDown, ShieldHalf, Clock } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
+import { useRoleScope } from '../hooks/useRoleScope.js'
+import RoleScopePill from '../components/shared/RoleScopePill.jsx'
 import { computeLeagues, currentSeason } from '../utils/computeLeagues.js'
 import { formatCurrencyCompact } from '../utils/formatters.js'
 import LocationPill from '../components/shared/LocationPill.jsx'
@@ -12,7 +14,7 @@ function initials(name = '') {
 }
 
 export default function Seasons() {
-  const consultants = useArenaStore((s) => s.consultants)
+  const { role, scoped: consultants } = useRoleScope()
   const currentUserId = useArenaStore((s) => s.currentUserId)
   const setCurrentUserId = useArenaStore((s) => s.setCurrentUserId)
 
@@ -27,12 +29,13 @@ export default function Seasons() {
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow">
             <ShieldHalf className="text-arena-amber" size={24} strokeWidth={2.4} />
           </div>
+          <RoleScopePill />
         </div>
         <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-arena-amber">Seasons</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">
-          Five leagues. One season per calendar year. Top of each league promotes, bottom relegates. Newcomers start in Bronze and climb.
+          Five leagues among {role} consultants. One season per calendar year. Top of each league promotes, bottom relegates. Newcomers start in Bronze and climb.
         </p>
       </header>
 

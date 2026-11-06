@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { GitCompare, ChevronDown, ArrowUp, ArrowDown, Minus } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
+import { useRoleScope } from '../hooks/useRoleScope.js'
+import RoleScopePill from '../components/shared/RoleScopePill.jsx'
 import { aggregate } from '../utils/computeRankings.js'
 import { formatCurrencyCompact } from '../utils/formatters.js'
 import LocationPill from '../components/shared/LocationPill.jsx'
@@ -47,11 +49,12 @@ function metricValue(consultant, metric, lifetime) {
 
 export default function Compare() {
   const consultants = useArenaStore((s) => s.consultants)
+  const { role, scoped } = useRoleScope()
   const months = useArenaStore((s) => s.months)
   const [params, setParams] = useSearchParams()
 
-  const aId = params.get('a') || consultants[0]?.id
-  const bId = params.get('b') || consultants[1]?.id
+  const aId = params.get('a') || scoped[0]?.id || consultants[0]?.id
+  const bId = params.get('b') || scoped[1]?.id || consultants[1]?.id
 
   const a = useMemo(() => consultants.find((c) => c.id === aId), [consultants, aId])
   const b = useMemo(() => consultants.find((c) => c.id === bId), [consultants, bId])
@@ -98,18 +101,19 @@ export default function Compare() {
           <div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow">
             <GitCompare className="text-accent-blue" size={24} strokeWidth={2.4} />
           </div>
+          <RoleScopePill />
         </div>
         <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-accent-blue">Compare</span>
         </h1>
         <p className="text-arena-muted max-w-2xl">
-          Two consultants, side by side. Useful for 1:1s, calibration calls, and quick benchmarking.
+          Two {role} consultants, side by side. Useful for 1:1s, calibration calls, and quick benchmarking.
         </p>
       </header>
 
       {/* Pickers + headline cards */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-3 lg:gap-4 items-stretch">
-        <SidePicker consultants={consultants} value={a.id} onChange={(id) => setSide('a', id)} side="a" />
+        <SidePicker consultants={scoped} value={a.id} onChange={(id) => setSide('a', id)} side="a" />
         <div className="flex flex-col items-center justify-center gap-2">
           <button
             onClick={swap}
@@ -122,7 +126,7 @@ export default function Compare() {
             vs
           </div>
         </div>
-        <SidePicker consultants={consultants} value={b.id} onChange={(id) => setSide('b', id)} side="b" flip />
+        <SidePicker consultants={scoped} value={b.id} onChange={(id) => setSide('b', id)} side="b" flip />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-3 lg:gap-4 items-start">
