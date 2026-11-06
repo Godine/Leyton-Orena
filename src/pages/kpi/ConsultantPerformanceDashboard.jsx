@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, Flame, Check, Minus, X as XIcon, AlertTriangle, ChevronDown,
-  FileSpreadsheet, User, ShieldAlert, Target,
+  FileSpreadsheet, User, ShieldAlert, Target, RotateCw, RotateCcw,
 } from 'lucide-react'
 import {
   getConsultants, getResultsFor, getManagerNote,
@@ -365,47 +365,150 @@ function Legend() {
   )
 }
 
-// ─── KPI meter card (replaces the ring) ──────────────────────────────────────
-function KpiMeterCard({ e, variants }) {
-  const { kpi, r, sc, scored } = e
-  const meta = KPI_META[kpi]
+// How each KPI's numerator / denominator read in plain English, and whether
+// they're money or counts — used to explain the "why" on the card back.
+const KPI_EXPLAIN = {
+  1: { num: 'Invoiced to date',       den: 'Cumulative target',   money: true,  verb: 'of target invoiced' },
+  2: { num: 'Accounts delivered',     den: 'Accounts planned',    money: false, verb: 'of plan delivered' },
+  3: { num: 'Invoiced before day 15', den: 'Total invoiced',      money: true,  verb: 'invoiced early' },
+  4: { num: 'Accounts retained',      den: 'Recurring base',      money: false, verb: 'retained' },
+  5: { num: 'Converted < 9 months',   den: 'Recurring claims',    money: false, verb: 'converted in time' },
+  6: { num: 'Invoiced < 60 days',     den: 'New-business claims', money: false, verb: 'landed in 60 days' },
+}
+
+function fmtVal(v, isMoney) {
+  if (v == null) return '—'
+  return isMoney ? `£${v.toLocaleString('en-GB', { maximumFractionDigits: 0 })}` : `${Math.round(v)}`
+}
+
+// Plain-language reason for the score.
+function kpiReason(e) {
+  const { kpi, sc, scored, periodType } = e
   const thr = kpiThreshold(kpi)
   const cap = kpi === 2 ? KPI2_CAP : null
-  const s = STATUS[scored ? sc.status : 'na']
+  const thrPct = Math.round(thr * 100)
+  if (!scored) {
+    return periodType === 'month'
+      ? 'Not scored yet — monthly scoring starts in September.'
+      : 'Not scored yet — quarterly scoring starts in Q2.'
+  }
+  if (sc.status === 'na') return 'No qualifying claims this period, so this KPI isn’t scored.'
+  if (sc.status === 'hit') {
+    return cap
+      ? `Inside the ${thrPct}–${Math.round(cap * 100)}% band — 1 point earned.`
+      : `Cleared the ${thrPct}% threshold — 1 point earned.`
+  }
+  if (cap && sc.ratio != null && sc.ratio >= cap) {
+    return `Above the ${Math.round(cap * 100)}% ceiling — 0 points.`
+  }
+  const short = sc.ratio == null ? null : ((thr - sc.ratio) * 100)
+  if (short != null && short > 0) {
+    return `${short.toFixed(1)} points short of the ${thrPct}% threshold — 0 points.`
+  }
+  return `Below the ${thrPct}% threshold — 0 points.`
+}
+
+// ─── KPI meter card — flips to reveal the breakdown behind the number ─────────
+function KpiMeterCard({ e, variants }) {
+  const { kpi, r, sc, scored } = e
+  const [flipped, setFlipped] = useState(false)
+  const meta = KPI_META[kpi]
+  const ex = KPI_EXPLAIN[kpi]
+  const thr = kpiThreshold(kpi)
+  const cap = kpi === 2 ? KPI2_CAP : null
   const statusKey = scored ? sc.status : 'na'
+  const s = STATUS[statusKey]
+  const noData = sc.status === 'na' || !r
+
+  const faceBase = 'absolute inset-0 arena-card p-4 flex flex-col text-left'
+  const hidden = { backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }
 
   return (
-    <motion.div variants={variants} whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-      className="arena-card p-4 flex flex-col gap-3">
-      {/* header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short}</div>
-          <div className="font-display font-bold text-arena-ink text-sm leading-tight">{meta.name}</div>
-        </div>
-        <StatusChip statusKey={statusKey} scored={scored} />
-      </div>
+    <motion.div variants={variants} className="relative" style={{ perspective: 1100 }}>
+      <motion.div
+        whileHover={{ y: -2 }}
+        className="relative w-full"
+        style={{ transformStyle: 'preserve-3d', height: 190 }}
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* ── FRONT ── */}
+        <button type="button" onClick={() => setFlipped(true)} aria-label={`${meta.name}: see why`}
+          className={`${faceBase} gap-3`} style={hidden}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short}</div>
+              <div className="font-display font-bold text-arena-ink text-sm leading-tight">{meta.name}</div>
+            </div>
+            <StatusChip statusKey={statusKey} scored={scored} />
+          </div>
 
-      {/* value */}
-      <div className="flex items-end justify-between gap-2">
-        <div className="font-display font-black text-arena-ink leading-none" style={{ fontSize: '1.9rem' }}>
-          {sc.status === 'na' ? 'N/A'
-            : sc.ratio == null ? '—'
-            : <CountUp value={sc.ratio * 100} duration={0.9} format={(v) => `${v.toFixed(1)}%`} />}
-        </div>
-        <div className="text-[11px] text-arena-muted tabular-nums text-right leading-tight">
-          {r ? <>n {money(r.numerator)}<br />d {money(r.denominator)}</> : 'no data'}
-        </div>
-      </div>
+          <div className="flex items-end justify-between gap-2">
+            <div className="font-display font-black text-arena-ink leading-none" style={{ fontSize: '1.9rem' }}>
+              {sc.status === 'na' ? 'N/A'
+                : sc.ratio == null ? '—'
+                : <CountUp value={sc.ratio * 100} duration={0.9} format={(v) => `${v.toFixed(1)}%`} />}
+            </div>
+            <div className="text-[11px] text-arena-muted tabular-nums text-right leading-tight">
+              {r ? <>n {money(r.numerator)}<br />d {money(r.denominator)}</> : 'no data'}
+            </div>
+          </div>
 
-      {/* meter */}
-      <Meter kpi={kpi} ratio={sc.ratio} status={statusKey} scored={scored} thr={thr} cap={cap} />
+          <Meter kpi={kpi} ratio={sc.ratio} status={statusKey} scored={scored} thr={thr} cap={cap} />
 
-      <div className="flex items-center justify-between text-[10px] text-arena-muted font-display font-bold">
-        <span className="inline-flex items-center gap-1"><Target size={10} /> Target {Math.round(thr * 100)}%{cap ? `–${Math.round(cap * 100)}%` : ''}</span>
-        {!scored && <span className="uppercase tracking-wider">Not scored</span>}
-      </div>
+          <div className="mt-auto flex items-center justify-between text-[10px] text-arena-muted font-display font-bold">
+            <span className="inline-flex items-center gap-1"><Target size={10} /> Target {Math.round(thr * 100)}%{cap ? `–${Math.round(cap * 100)}%` : ''}</span>
+            <span className="inline-flex items-center gap-1 text-arena-amber"><RotateCw size={10} strokeWidth={3} /> Why?</span>
+          </div>
+        </button>
+
+        {/* ── BACK ── */}
+        <button type="button" onClick={() => setFlipped(false)} aria-label={`${meta.name}: back`}
+          className={`${faceBase} gap-2`} style={{ ...hidden, transform: 'rotateY(180deg)' }}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short} · why this number</div>
+            <RotateCcw size={12} className="text-arena-muted shrink-0" strokeWidth={2.6} />
+          </div>
+
+          {noData ? (
+            <div className="flex-1 grid place-items-center text-center">
+              <div className="text-sm text-arena-muted">No qualifying claims this period — nothing to score.</div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-center gap-1.5">
+              <ExRow label={ex.num} value={fmtVal(r.numerator, ex.money)} strong />
+              <ExRow label={ex.den} value={fmtVal(r.denominator, ex.money)} />
+              <div className="h-px bg-arena-border my-0.5" />
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-arena-ink">
+                  <span className="h-2 w-2 rounded-full" style={{ background: scored ? s.color : '#8A8F9C' }} />
+                  {sc.ratio == null ? '—' : `${(sc.ratio * 100).toFixed(1)}%`} {ex.verb}
+                </span>
+                <span className="text-[10px] font-display font-black" style={{ color: scored && sc.status === 'hit' ? '#F75C03' : '#8A8F9C' }}>
+                  {scored ? (sc.status === 'hit' ? '+1 pt' : '0 pts') : '— pts'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="text-[11px] leading-snug" style={{ color: 'rgb(var(--arena-ink-rgb) / 0.75)' }}>
+            {kpiReason(e)}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-arena-muted/70 font-display font-bold inline-flex items-center gap-1">
+            <FileSpreadsheet size={9} /> Imported · line-item drill-down with the live engine
+          </div>
+        </button>
+      </motion.div>
     </motion.div>
+  )
+}
+
+function ExRow({ label, value, strong }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[11px] text-arena-muted truncate">{label}</span>
+      <span className={['tabular-nums font-display shrink-0', strong ? 'font-black text-arena-ink text-sm' : 'font-bold text-arena-ink/80 text-xs'].join(' ')}>{value}</span>
+    </div>
   )
 }
 
