@@ -83,3 +83,21 @@ export function getManagers() {
 export function getADs() {
   return [...new Set(consultants.map((c) => c.ad))].filter(Boolean).sort()
 }
+
+// ── Link Arena consultants (own roster) to their KPI workbook record by name ──
+// Case/accent-folded, with the same spelling aliases used when the Arena roster
+// was generated from this list.
+function normName(n = '') {
+  return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+// Arena spelling → KPI spelling for the few that differ beyond case/accents.
+const ARENA_TO_KPI = { 'scott toner': 'scott tonner', 'henry shipley': 'henry shiplee' }
+const _kpiNameByNorm = new Map()
+for (const c of consultants) _kpiNameByNorm.set(normName(c.name), c.name)
+
+// Returns the canonical KPI consultant name for an Arena name, or null.
+export function resolveKpiName(arenaName) {
+  const k = normName(arenaName)
+  const target = ARENA_TO_KPI[k] ?? k
+  return _kpiNameByNorm.get(target) ?? null
+}

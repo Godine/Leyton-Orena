@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, ChevronDown, ArrowUp, ArrowDown, Minus, Sparkles, Swords, GitCompare, ArrowRight, Lightbulb, LayoutDashboard } from 'lucide-react'
+import { User, ChevronDown, ArrowUp, ArrowDown, Minus, Sparkles, Swords, GitCompare, ArrowRight, Lightbulb, LayoutDashboard, Target } from 'lucide-react'
 import { useArenaStore } from '../store/useArenaStore.js'
 import { buildLeaderboard, aggregate } from '../utils/computeRankings.js'
 import { closestToUnlock } from '../utils/badgeEligibility.js'
@@ -19,6 +19,7 @@ import LoadingBar from '../components/shared/LoadingBar.jsx'
 import useStaleWhileChanging from '../components/shared/useStaleWhileChanging.js'
 import BadgeDetailModal from '../components/achievements/BadgeDetailModal.jsx'
 import CoachingTab from '../components/profile/CoachingTab.jsx'
+import KpiScorecard from '../components/profile/KpiScorecard.jsx'
 
 const JOIN_DATES = {
   'c-01': 'Mar 2022', 'c-02': 'Jun 2023', 'c-03': 'Sep 2021', 'c-04': 'Jan 2024',
@@ -141,6 +142,8 @@ export default function Profile() {
 
       {tab === 'coaching' ? (
         <CoachingTab consultant={consultant} />
+      ) : tab === 'kpis' ? (
+        <KpiScorecard consultant={consultant} />
       ) : (
         <>
       <section>
@@ -203,6 +206,7 @@ export default function Profile() {
 function ProfileTabs({ tab, onChange }) {
   const tabs = [
     { id: 'overview', label: 'Overview',  icon: LayoutDashboard },
+    { id: 'kpis',     label: 'KPIs',      icon: Target },
     { id: 'coaching', label: 'Coaching',  icon: Lightbulb },
   ]
   return (
