@@ -1,5 +1,11 @@
-// Deterministic mock dataset for 16 consultants across Oct 2024 – Mar 2025.
-// Profiles are hand-tuned (strong / improving / inconsistent) so leaderboards feel real.
+// Deterministic mock dataset across Oct 2024 – Mar 2025. The first 25 entries
+// are hand-tuned (strong / improving / inconsistent) so leaderboards feel real
+// and keep stable indices for the id-based duel/reward seeds. The rest of the
+// roster is generated from the real consultant list in the KPI workbook
+// (src/kpi/data/seed/consultants.json) — names, TC/FC category and
+// manager/AD come straight from that data; Arena's synthetic monthly stats,
+// fire and badges are assigned deterministically so every page keeps working.
+import kpiConsultants from '../kpi/data/seed/consultants.json'
 
 const MONTHS = ['2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03']
 
@@ -62,7 +68,11 @@ function buildMonthlyStats(profileKey, jitter = 0) {
   }))
 }
 
-const SEED = [
+// The hand-tuned core (indices 0–24). Order and indices are LOAD-BEARING:
+// useDuelStore / useRewardStore seeds reference these by id (c-01…c-25), and
+// the star-tuning maps below (FIRE_OVERRIDES, STAR_LIFETIME, BADGE_CAPS) are
+// keyed by index. Do not reorder.
+const KNOWN_SEED = [
   // Technical (7)
   { name: 'Oumayma El Mahjoubi', role: 'Technical', location: 'Casablanca', profile: 'strong',       streak: { currentMonthlyStreak: 5, bestMonthlyStreak: 6 }, badges: ['lab-rat','front-loader','peak-month','on-fire','growth-engine','diamond-hands'] },
   { name: 'David Buckley',       role: 'Technical', location: 'London',     profile: 'improving',    streak: { currentMonthlyStreak: 3, bestMonthlyStreak: 3 }, badges: ['ice-breaker','growth-engine','on-fire'] },
@@ -93,6 +103,63 @@ const SEED = [
   // Solo addition — appended at the end so all other indices stay stable.
   { name: 'Issam El Ahmadi',     role: 'Technical', location: 'Casablanca', profile: 'steady',       seniority: 'Senior Consultant', streak: { currentMonthlyStreak: 2, bestMonthlyStreak: 3 }, badges: [] },
 ]
+
+// ── Roster generation from the KPI workbook consultant list ──────────────────
+const OFFICES = ['London', 'Casablanca', 'Dublin', 'Glasgow', 'Bristol']
+const EXTRA_PROFILES = ['steady', 'improving', 'steady', 'inconsistent', 'improving'] // mix skewed away from "strong" so the hand-tuned core stays on top
+
+function stableHash(str) {
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0
+  return h
+}
+// Normalise names so spelling/case/accent variants between the two datasets
+// collapse to one person.
+function normName(n = '') {
+  return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+// KPI spelling → Arena core spelling, for the few that differ by more than case.
+const KPI_TO_CORE = { 'scott tonner': 'scott toner', 'henry shiplee': 'henry shipley' }
+const coreKey = (n) => { const k = normName(n); return KPI_TO_CORE[k] ?? k }
+
+// Look up KPI category/manager/ad by normalised (and alias-folded) name.
+const kpiByKey = new Map()
+for (const k of kpiConsultants) kpiByKey.set(coreKey(k.name), k)
+
+const STREAK_BY_PROFILE = {
+  strong:       { currentMonthlyStreak: 4, bestMonthlyStreak: 5 },
+  steady:       { currentMonthlyStreak: 2, bestMonthlyStreak: 3 },
+  improving:    { currentMonthlyStreak: 2, bestMonthlyStreak: 2 },
+  inconsistent: { currentMonthlyStreak: 0, bestMonthlyStreak: 2 },
+}
+
+// Augment the core 25 with manager/AD from the KPI data where we can match.
+const CORE_SEED = KNOWN_SEED.map((c) => {
+  const k = kpiByKey.get(coreKey(c.name))
+  return k ? { ...c, manager: k.manager, ad: k.ad } : c
+})
+
+// Everyone in the KPI roster who isn't already one of the core 25.
+const coreKeys = new Set(KNOWN_SEED.map((c) => coreKey(c.name)))
+const EXTRA_SEED = kpiConsultants
+  .filter((k) => !coreKeys.has(coreKey(k.name)))
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((k) => {
+    const h = stableHash(k.name)
+    const profile = EXTRA_PROFILES[h % EXTRA_PROFILES.length]
+    return {
+      name: k.name,
+      role: k.category === 'FC' ? 'Financial' : 'Technical',
+      location: OFFICES[h % OFFICES.length],
+      profile,
+      manager: k.manager,
+      ad: k.ad,
+      streak: STREAK_BY_PROFILE[profile],
+      badges: [],
+    }
+  })
+
+const SEED = [...CORE_SEED, ...EXTRA_SEED]
 
 // Deterministically spreads a consultant's earned badges across the 6 months.
 // Current user (idx 0) always has their final badge land in the latest month so
@@ -468,6 +535,8 @@ export const CONSULTANTS = SEED.map((c, idx) => {
     role: c.role,
     seniority: c.seniority ?? null,
     location: c.location,
+    manager: c.manager ?? null,
+    ad: c.ad ?? null,
     // Per-consultant monthly targets. Defaults match the old global ones; the
     // Admin page lets managers override on a per-person basis.
     targets: {
