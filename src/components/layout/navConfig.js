@@ -1,4 +1,4 @@
-import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3 } from 'lucide-react'
+import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3, LineChart } from 'lucide-react'
 
 // Grouped navigation. Groups without a `label` render flat (no header, no
 // collapse). Labelled groups render as collapsible sections.
@@ -17,6 +17,7 @@ export const NAV_GROUPS = [
       { to: '/rewards',      label: 'Rewards',      icon: Gift },
       { to: '/manager',      label: 'Manager',      icon: Gauge },
       { to: '/leaderboard',  label: 'Rankings',     icon: BarChart3 },
+      { to: '/performance',  label: 'Performance',  icon: LineChart },
     ],
   },
 ]
