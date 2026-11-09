@@ -7,9 +7,10 @@ import {
   UploadCloud, Download, ArrowUpDown, Users, Sparkles,
 } from 'lucide-react'
 import { useKpiStore } from '../../store/useKpiStore.js'
+import { useArenaStore } from '../../store/useArenaStore.js'
 import {
   getConsultants, getResultsFor, getManagerNote,
-  getManagers, getADs, FISCAL_MONTHS,
+  getManagers, getADs, FISCAL_MONTHS, resolveKpiName,
 } from '../../kpi/data/kpiData.js'
 import {
   scoreMonthlyKpi, scoreQuarterlyKpi, kpiThreshold, KPI2_CAP,
@@ -124,6 +125,10 @@ export default function ConsultantPerformanceDashboard() {
   const managers = useMemo(() => getManagers(extra), [extra])
   const ads = useMemo(() => getADs(extra), [extra])
 
+  // The consultant you were viewing on your profile (Arena "view as"), linked to
+  // their KPI record — so clicking "Performance" opens the same person.
+  const arenaUserName = useArenaStore((s) => s.getCurrentUser()?.name)
+
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState('All')
@@ -132,7 +137,12 @@ export default function ConsultantPerformanceDashboard() {
   const [sort, setSort] = useState('name')          // name | points-desc | points-asc | attention
   const [statusFilter, setStatusFilter] = useState('all') // all | review | below | meets
   const [view, setView] = useState('consultant')    // consultant | team
-  const [selected, setSelected] = useState(() => params.get('consultant') || consultants[0]?.name || null)
+  const [selected, setSelected] = useState(() => {
+    const q = params.get('consultant')
+    if (q && consultants.some((c) => c.name === q)) return q
+    const linked = arenaUserName ? resolveKpiName(arenaUserName, extra) : null
+    return linked || consultants[0]?.name || null
+  })
 
   // Deep-link: ?consultant=Name preselects (used by the profile link).
   useEffect(() => {
