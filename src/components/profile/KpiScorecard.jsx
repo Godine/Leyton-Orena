@@ -5,6 +5,7 @@ import { Check, Minus, X as XIcon, AlertTriangle, FileSpreadsheet, ArrowUpRight,
 import {
   resolveKpiName, getResultsFor, FISCAL_MONTHS,
 } from '../../kpi/data/kpiData.js'
+import { useKpiStore } from '../../store/useKpiStore.js'
 import {
   scoreMonthlyKpi, scoreQuarterlyKpi,
   monthlyPoints, quarterPoints, monthScored, quarterScored,
@@ -25,8 +26,10 @@ const KPI_NAME = {
 const pct = (r, dp = 0) => (r == null ? '—' : `${(r * 100).toFixed(dp)}%`)
 
 export default function KpiScorecard({ consultant }) {
-  const kpiName = useMemo(() => resolveKpiName(consultant.name), [consultant.name])
-  const results = useMemo(() => (kpiName ? getResultsFor(kpiName) : {}), [kpiName])
+  const overrides = useKpiStore((s) => s.overrides)
+  const extra = useKpiStore((s) => s.extraConsultants)
+  const kpiName = useMemo(() => resolveKpiName(consultant.name, extra), [consultant.name, extra])
+  const results = useMemo(() => (kpiName ? getResultsFor(kpiName, overrides) : {}), [kpiName, overrides])
 
   const model = useMemo(() => {
     if (!kpiName) return null
@@ -93,7 +96,7 @@ export default function KpiScorecard({ consultant }) {
 
       <div className="flex items-center justify-between text-xs text-arena-muted">
         <span className="inline-flex items-center gap-1.5"><FileSpreadsheet size={12} /> Imported · official scoring starts Sep (monthly) / Q2 (quarterly)</span>
-        <Link to="/performance" className="inline-flex items-center gap-1 text-arena-amber font-display font-bold hover:underline">
+        <Link to={`/performance?consultant=${encodeURIComponent(kpiName)}`} className="inline-flex items-center gap-1 text-arena-amber font-display font-bold hover:underline">
           Full dashboard <ArrowUpRight size={13} />
         </Link>
       </div>

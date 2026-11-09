@@ -1,9 +1,12 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, Flame, Check, Minus, X as XIcon, AlertTriangle, ChevronDown,
   FileSpreadsheet, User, ShieldAlert, Target, RotateCw, RotateCcw,
+  UploadCloud, Download, ArrowUpDown, Users, Sparkles,
 } from 'lucide-react'
+import { useKpiStore } from '../../store/useKpiStore.js'
 import {
   getConsultants, getResultsFor, getManagerNote,
   getManagers, getADs, FISCAL_MONTHS,
@@ -13,6 +16,50 @@ import {
   monthlyPoints, quarterPoints, monthlyVerdict, quarterlyVerdict,
   meetsStreak, monthScored, quarterScored, monthHasData, quarterHasData,
 } from '../../kpi/scoring.js'
+
+// Per-consultant summary used for roster signals, sorting, team stats, export.
+function summarize(name, overrides) {
+  const results = getResultsFor(name, overrides)
+  const months = FISCAL_MONTHS.filter((m) => monthHasData(results, m.period))
+  const quarters = [1, 2, 3, 4].filter((q) => quarterHasData(results, q))
+  let total = 0, max = 0
+  for (const m of months) { total += monthlyPoints(results, m.period); max += 3 }
+  for (const q of quarters) { total += quarterPoints(results, q); max += 3 }
+  const scoredMonths = months.filter((m) => monthScored(m.period))
+  const lastScored = scoredMonths[scoredMonths.length - 1]
+  const verdict = lastScored ? monthlyVerdict(results, lastScored.period) : null
+  let review = false
+  for (let i = 1; i < scoredMonths.length; i++) {
+    if (monthlyPoints(results, scoredMonths[i].period) < 2 && monthlyPoints(results, scoredMonths[i - 1].period) < 2) review = true
+  }
+  return { name, results, months, quarters, total, max, verdict, review, hasData: months.length + quarters.length > 0 }
+}
+
+function downloadCsv(rows, overrides) {
+  const monthCols = FISCAL_MONTHS.filter((m) => rows.some((r) => monthHasData(getResultsFor(r.name, overrides), m.period)))
+  const qCols = [1, 2, 3, 4].filter((q) => rows.some((r) => quarterHasData(getResultsFor(r.name, overrides), q)))
+  const header = ['Consultant', 'Category', 'Manager', 'AD',
+    ...monthCols.map((m) => `${m.label} pts`), ...qCols.map((q) => `Q${q} pts`), 'Total', 'Max']
+  const lines = [header.join(',')]
+  for (const r of rows) {
+    const res = getResultsFor(r.name, overrides)
+    const s = summarize(r.name, overrides)
+    const cells = [
+      `"${r.name}"`, r.category, `"${r.manager ?? ''}"`, `"${r.ad ?? ''}"`,
+      ...monthCols.map((m) => (monthHasData(res, m.period) ? monthlyPoints(res, m.period) : '')),
+      ...qCols.map((q) => (quarterHasData(res, q) ? quarterPoints(res, q) : '')),
+      s.total, s.max,
+    ]
+    lines.push(cells.join(','))
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'leyton-arena-kpi-scorecards.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 // Status is a RESERVED palette (not categorical): each state ships with an icon
 // + label, never colour alone. Values/labels stay in ink tokens; colour lives
@@ -69,25 +116,67 @@ function CountUp({ value = 0, duration = 0.8, format = (v) => Math.round(v) }) {
 }
 
 export default function ConsultantPerformanceDashboard() {
-  const consultants = useMemo(() => getConsultants(), [])
-  const managers = useMemo(() => getManagers(), [])
-  const ads = useMemo(() => getADs(), [])
+  const overrides = useKpiStore((s) => s.overrides)
+  const extra = useKpiStore((s) => s.extraConsultants)
+  const hasOverrides = Object.keys(overrides).length > 0
 
+  const consultants = useMemo(() => getConsultants(extra), [extra])
+  const managers = useMemo(() => getManagers(extra), [extra])
+  const ads = useMemo(() => getADs(extra), [extra])
+
+  const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState('All')
   const [manager, setManager] = useState('All')
   const [ad, setAd] = useState('All')
-  const [selected, setSelected] = useState(consultants[0]?.name ?? null)
+  const [sort, setSort] = useState('name')          // name | points-desc | points-asc | attention
+  const [statusFilter, setStatusFilter] = useState('all') // all | review | below | meets
+  const [view, setView] = useState('consultant')    // consultant | team
+  const [selected, setSelected] = useState(() => params.get('consultant') || consultants[0]?.name || null)
+
+  // Deep-link: ?consultant=Name preselects (used by the profile link).
+  useEffect(() => {
+    const q = params.get('consultant')
+    if (q && q !== selected && consultants.some((c) => c.name === q)) setSelected(q)
+  }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pick = (name) => {
+    setSelected(name)
+    setView('consultant')
+    const next = new URLSearchParams(params); next.set('consultant', name); setParams(next, { replace: true })
+  }
+
+  // Summaries for the whole roster (cheap at this size), used for signals/sort/stats.
+  const summaries = useMemo(() => {
+    const map = new Map()
+    for (const c of consultants) map.set(c.name, summarize(c.name, overrides))
+    return map
+  }, [consultants, overrides])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return consultants
+    let rows = consultants
       .filter((c) => cat === 'All' || c.category === cat)
       .filter((c) => manager === 'All' || c.manager === manager)
       .filter((c) => ad === 'All' || c.ad === ad)
       .filter((c) => !q || c.name.toLowerCase().includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [consultants, query, cat, manager, ad])
+    if (statusFilter !== 'all') {
+      rows = rows.filter((c) => {
+        const s = summaries.get(c.name)
+        if (statusFilter === 'review') return s?.review
+        if (statusFilter === 'below') return s?.verdict?.kind === 'below' || s?.verdict?.kind === 'review'
+        if (statusFilter === 'meets') return s?.verdict?.kind === 'meets'
+        return true
+      })
+    }
+    const by = {
+      name: (a, b) => a.name.localeCompare(b.name),
+      'points-desc': (a, b) => (summaries.get(b.name)?.total ?? 0) - (summaries.get(a.name)?.total ?? 0) || a.name.localeCompare(b.name),
+      'points-asc': (a, b) => (summaries.get(a.name)?.total ?? 0) - (summaries.get(b.name)?.total ?? 0) || a.name.localeCompare(b.name),
+      attention: (a, b) => (scoreAttention(summaries.get(b.name)) - scoreAttention(summaries.get(a.name))) || a.name.localeCompare(b.name),
+    }
+    return [...rows].sort(by[sort] ?? by.name)
+  }, [consultants, query, cat, manager, ad, statusFilter, sort, summaries])
 
   return (
     <div className="space-y-6 xl:space-y-8">
@@ -95,14 +184,26 @@ export default function ConsultantPerformanceDashboard() {
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
         <div className="pointer-events-none absolute -top-24 -left-16 h-56 w-56 rounded-full opacity-25 blur-3xl"
           style={{ background: 'radial-gradient(circle, #F75C03, transparent 70%)' }} />
-        <div className="flex items-center gap-3">
-          <motion.div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber"
-            initial={{ rotate: -8, scale: 0.8 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
-            <User className="text-arena-amber" size={24} strokeWidth={2.4} />
-          </motion.div>
-          <span className="arena-chip bg-arena-surface2 text-arena-muted inline-flex items-center gap-1.5">
-            <FileSpreadsheet size={12} /> Imported from workbook · Jul–Sep 2026 + Q1
-          </span>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <motion.div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber"
+              initial={{ rotate: -8, scale: 0.8 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
+              <User className="text-arena-amber" size={24} strokeWidth={2.4} />
+            </motion.div>
+            <span className="arena-chip bg-arena-surface2 text-arena-muted inline-flex items-center gap-1.5">
+              <FileSpreadsheet size={12} /> {hasOverrides ? 'Custom data active' : 'Imported from workbook · Jul–Sep 2026 + Q1'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => downloadCsv(filtered, overrides)}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-arena-surface border border-arena-border text-xs font-display font-bold text-arena-ink hover:border-arena-amber/50">
+              <Download size={13} /> Export CSV
+            </button>
+            <Link to="/performance/upload"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-arena-amber text-arena-bg text-xs font-display font-black shadow-glow-amber hover:brightness-110">
+              <UploadCloud size={14} strokeWidth={2.6} /> Update data
+            </Link>
+          </div>
         </div>
         <h1 className="text-4xl md:text-5xl xl:text-6xl font-display font-black">
           <span className="text-arena-amber">Consultant Performance</span> Dashboard
@@ -115,26 +216,73 @@ export default function ConsultantPerformanceDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 xl:gap-6">
         <Roster
-          rows={filtered} selected={selected} onSelect={setSelected}
+          rows={filtered} selected={view === 'team' ? null : selected} onSelect={pick}
           query={query} onQuery={setQuery} cat={cat} onCat={setCat}
           manager={manager} onManager={setManager} managers={managers}
           ad={ad} onAd={setAd} ads={ads} total={consultants.length}
+          sort={sort} onSort={setSort} statusFilter={statusFilter} onStatusFilter={setStatusFilter}
+          summaries={summaries}
+          onTeam={() => setView('team')} teamActive={view === 'team'}
         />
         <AnimatePresence mode="wait">
-          {selected
-            ? <Detail key={selected} name={selected} />
-            : <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="arena-card p-12 text-center text-arena-muted">Pick a consultant to see their performance.</motion.div>}
+          {view === 'team' ? (
+            <TeamOverview key="team" rows={filtered} summaries={summaries} overrides={overrides} onPick={pick} />
+          ) : selected ? (
+            <Detail key={selected} name={selected} overrides={overrides} summary={summaries.get(selected)} />
+          ) : (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="arena-card p-12 text-center text-arena-muted">Pick a consultant to see their performance.</motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
   )
 }
 
-// ─── Roster (unchanged layout; list was fine) ────────────────────────────────
-function Roster({ rows, selected, onSelect, query, onQuery, cat, onCat, manager, onManager, managers, ad, onAd, ads, total }) {
+// Higher = more urgent. Review flags first, then below-expectation, then low points.
+function scoreAttention(s) {
+  if (!s || !s.hasData) return -1
+  let v = 0
+  if (s.review) v += 100
+  if (s.verdict?.kind === 'below') v += 40
+  v += (s.max - s.total) // more missing points = more attention
+  return v
+}
+
+const RAG = (s) => {
+  if (!s || !s.hasData) return { color: '#8A8F9C' }
+  if (s.review) return { color: '#E5484D' }
+  if (s.verdict?.kind === 'below') return { color: '#E0A400' }
+  if (s.verdict?.kind === 'meets') return { color: '#F75C03' }
+  const frac = s.max ? s.total / s.max : 0
+  return { color: frac >= 0.66 ? '#F75C03' : frac >= 0.33 ? '#E0A400' : '#E5484D' }
+}
+
+// ─── Roster — now carries per-consultant signal + sort + status filter ───────
+const SORTS = [
+  { key: 'name', label: 'A–Z' },
+  { key: 'points-desc', label: 'Top points' },
+  { key: 'points-asc', label: 'Low points' },
+  { key: 'attention', label: 'Needs attention' },
+]
+const STATUS_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'meets', label: 'Meets' },
+  { key: 'below', label: 'Below' },
+  { key: 'review', label: 'Review' },
+]
+
+function Roster({ rows, selected, onSelect, query, onQuery, cat, onCat, manager, onManager, managers, ad, onAd, ads, total,
+  sort, onSort, statusFilter, onStatusFilter, summaries, onTeam, teamActive }) {
   return (
     <aside className="arena-card p-3 lg:sticky lg:top-4 self-start">
+      {/* Team overview toggle */}
+      <button onClick={onTeam}
+        className={['w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-display font-black transition-colors mb-2',
+          teamActive ? 'bg-arena-amber text-arena-bg shadow-glow-amber' : 'bg-arena-surface2 text-arena-ink hover:bg-arena-surface2/70'].join(' ')}>
+        <Users size={13} strokeWidth={2.6} /> Team overview
+      </button>
+
       <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-arena-bg/60 border border-arena-border focus-within:border-arena-amber/60 transition-colors">
         <Search size={15} className="text-arena-muted shrink-0" />
         <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Search consultants…"
@@ -145,11 +293,18 @@ function Roster({ rows, selected, onSelect, query, onQuery, cat, onCat, manager,
         <Picker value={manager} onChange={onManager} options={managers} allLabel="All managers" />
         <Picker value={ad} onChange={onAd} options={ads} allLabel="All ADs" />
       </div>
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
+        <LabeledPicker icon={ArrowUpDown} value={sort} onChange={onSort} options={SORTS} />
+        <LabeledPicker icon={AlertTriangle} value={statusFilter} onChange={onStatusFilter} options={STATUS_FILTERS} />
+      </div>
+
       <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold px-1">{rows.length} of {total}</div>
-      <ul className="mt-1 max-h-[64vh] overflow-y-auto pr-1 space-y-1">
+      <ul className="mt-1 max-h-[60vh] overflow-y-auto pr-1 space-y-1">
         <AnimatePresence initial={false} mode="popLayout">
           {rows.map((c, i) => {
             const active = c.name === selected
+            const s = summaries.get(c.name)
+            const rag = RAG(s)
             return (
               <motion.li key={c.name} layout
                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
@@ -163,9 +318,18 @@ function Roster({ rows, selected, onSelect, query, onQuery, cat, onCat, manager,
                     {initials(c.name)}
                   </span>
                   <span className="relative min-w-0 flex-1">
-                    <span className="block text-sm font-display font-bold text-arena-ink truncate">{c.name}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: rag.color }} title="status" />
+                      <span className="text-sm font-display font-bold text-arena-ink truncate">{c.name}</span>
+                      {s?.review && <ShieldAlert size={11} className="text-accent-coral shrink-0" title="Performance review" />}
+                    </span>
                     <span className="block text-[10px] uppercase tracking-[0.14em] text-arena-muted font-display font-bold truncate">{c.category} · {c.manager}</span>
                   </span>
+                  {s?.hasData && (
+                    <span className="relative text-[10px] font-display font-black text-arena-ink tabular-nums shrink-0">
+                      {s.total}<span className="text-arena-muted font-bold">/{s.max}</span>
+                    </span>
+                  )}
                 </button>
               </motion.li>
             )
@@ -207,10 +371,138 @@ function Picker({ value, onChange, options, allLabel }) {
   )
 }
 
+// Picker whose options are {key,label} with a leading icon.
+function LabeledPicker({ icon: Icon, value, onChange, options }) {
+  return (
+    <span className="relative">
+      <Icon size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-arena-muted pointer-events-none" />
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none bg-arena-bg/70 border border-arena-border rounded-full pl-7 pr-6 py-1.5 text-[11px] font-display font-bold text-arena-ink focus:outline-none focus:border-arena-amber/60 cursor-pointer transition-colors">
+        {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+      </select>
+      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-arena-muted pointer-events-none" />
+    </span>
+  )
+}
+
+// ─── Team overview ───────────────────────────────────────────────────────────
+function TeamOverview({ rows, summaries, overrides, onPick }) {
+  const withData = rows.filter((c) => summaries.get(c.name)?.hasData)
+  const totalPts = withData.reduce((a, c) => a + (summaries.get(c.name)?.total ?? 0), 0)
+  const maxPts = withData.reduce((a, c) => a + (summaries.get(c.name)?.max ?? 0), 0)
+  const meets = withData.filter((c) => summaries.get(c.name)?.verdict?.kind === 'meets').length
+  const below = withData.filter((c) => ['below', 'review'].includes(summaries.get(c.name)?.verdict?.kind)).length
+  const review = withData.filter((c) => summaries.get(c.name)?.review).length
+
+  // Per-KPI hit rate across the team's latest available period for each KPI.
+  const kpiHit = [1, 2, 3, 4, 5, 6].map((kpi) => {
+    const monthly = kpi <= 3
+    let hit = 0, assessable = 0
+    for (const c of withData) {
+      const res = getResultsFor(c.name, overrides)
+      if (monthly) {
+        const last = FISCAL_MONTHS.filter((m) => monthHasData(res, m.period)).pop()
+        if (!last) continue
+        const sc = scoreMonthlyKpi(kpi, res[`month:${last.period}:${kpi}`], last.period)
+        if (sc.status === 'na' || sc.status === 'empty') continue
+        assessable += 1; if (sc.status === 'hit') hit += 1
+      } else {
+        const lastQ = [1, 2, 3, 4].filter((q) => quarterHasData(res, q)).pop()
+        if (!lastQ) continue
+        const sc = scoreQuarterlyKpi(kpi, res[`quarter:${lastQ}:${kpi}`])
+        if (sc.status === 'na' || sc.status === 'empty') continue
+        assessable += 1; if (sc.status === 'hit') hit += 1
+      }
+    }
+    return { kpi, pct: assessable ? hit / assessable : null, hit, assessable }
+  })
+
+  // Rank table — top & bottom by total points.
+  const ranked = [...withData].sort((a, b) => (summaries.get(b.name)?.total ?? 0) - (summaries.get(a.name)?.total ?? 0))
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.35, ease: EASE }} className="space-y-5">
+      <div className="arena-card p-5 md:p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Users size={18} className="text-arena-amber" />
+          <h2 className="font-display font-black text-arena-ink text-xl">Team overview</h2>
+          <span className="text-xs text-arena-muted">· {withData.length} with data</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <BigStat label="Avg points" value={withData.length ? (totalPts / withData.length).toFixed(1) : '—'} sub={`of ${maxPts && withData.length ? (maxPts / withData.length).toFixed(0) : '—'}`} />
+          <BigStat label="Meets expectation" value={meets} tone="#F75C03" />
+          <BigStat label="Below" value={below} tone="#E0A400" />
+          <BigStat label="Performance review" value={review} tone="#E5484D" />
+        </div>
+
+        {/* Per-KPI hit rate */}
+        <div className="mt-5 space-y-2">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-arena-muted font-display font-bold">% of team hitting each KPI · latest period</div>
+          {kpiHit.map((k) => (
+            <div key={k.kpi} className="flex items-center gap-3">
+              <span className="w-28 shrink-0 text-xs font-display font-bold text-arena-ink">{KPI_META[k.kpi].short} · {KPI_META[k.kpi].name}</span>
+              <div className="flex-1 h-2.5 rounded-full bg-arena-surface2 overflow-hidden">
+                <motion.div className="h-full rounded-full" style={{ background: '#F75C03' }}
+                  initial={{ width: 0 }} animate={{ width: `${(k.pct ?? 0) * 100}%` }} transition={{ duration: 0.7, ease: EASE }} />
+              </div>
+              <span className="w-16 text-right text-xs font-display font-black text-arena-ink tabular-nums">
+                {k.pct == null ? 'N/A' : `${Math.round(k.pct * 100)}%`}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ranked list */}
+      <div className="arena-card p-0 overflow-hidden">
+        <div className="px-4 py-3 border-b border-arena-border flex items-center justify-between">
+          <h3 className="font-display font-black text-arena-ink">Points ranking</h3>
+          <span className="text-xs text-arena-muted">click a row to open</span>
+        </div>
+        <ul className="divide-y divide-arena-border max-h-[420px] overflow-y-auto">
+          {ranked.map((c, i) => {
+            const s = summaries.get(c.name)
+            const rag = RAG(s)
+            return (
+              <li key={c.name}>
+                <button onClick={() => onPick(c.name)} className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-arena-surface2/50 transition-colors">
+                  <span className="w-6 text-xs font-display font-black text-arena-muted tabular-nums">{i + 1}</span>
+                  <span className="h-7 w-7 rounded-lg grid place-items-center text-[10px] font-display font-black text-white shrink-0" style={{ background: avatarColor(c.name) }}>{initials(c.name)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: rag.color }} />
+                      <span className="text-sm font-display font-bold text-arena-ink truncate">{c.name}</span>
+                      {s?.review && <ShieldAlert size={11} className="text-accent-coral" />}
+                    </span>
+                    <span className="block text-[10px] uppercase tracking-wider text-arena-muted font-display font-bold truncate">{c.category} · {c.manager}</span>
+                  </span>
+                  <span className="text-sm font-display font-black text-arena-ink tabular-nums">{s.total}<span className="text-arena-muted text-xs font-bold">/{s.max}</span></span>
+                </button>
+              </li>
+            )
+          })}
+          {ranked.length === 0 && <li className="px-4 py-8 text-center text-sm text-arena-muted">No consultants with data in this filter.</li>}
+        </ul>
+      </div>
+    </motion.div>
+  )
+}
+
+function BigStat({ label, value, sub, tone }) {
+  return (
+    <div className="rounded-xl bg-arena-bg/50 border border-arena-border p-3">
+      <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{label}</div>
+      <div className="mt-0.5 font-display font-black text-2xl" style={{ color: tone || 'rgb(var(--arena-ink-rgb))' }}>{value}</div>
+      {sub && <div className="text-[10px] text-arena-muted">{sub}</div>}
+    </div>
+  )
+}
+
 // ─── Detail ──────────────────────────────────────────────────────────────────
-function Detail({ name }) {
-  const consultant = useMemo(() => getConsultants().find((c) => c.name === name), [name])
-  const results = useMemo(() => getResultsFor(name), [name])
+function Detail({ name, overrides, summary }) {
+  const consultant = useMemo(() => getConsultants(useKpiStore.getState().extraConsultants).find((c) => c.name === name), [name])
+  const results = useMemo(() => getResultsFor(name, overrides), [name, overrides])
   const note = getManagerNote(name)
   const streak = meetsStreak(results)
 
@@ -278,6 +570,14 @@ function Detail({ name }) {
             </div>
           </div>
         </div>
+
+        {summary?.review && (
+          <div className="mt-4 rounded-xl bg-accent-coral/10 ring-1 ring-inset ring-accent-coral/40 p-3 flex items-start gap-2.5">
+            <ShieldAlert size={15} className="text-accent-coral mt-0.5 shrink-0" />
+            <div className="text-sm text-arena-ink/90"><span className="font-display font-black text-accent-coral">Performance review flag · </span>
+              two consecutive scored months below expectation (&lt; 2 points).</div>
+          </div>
+        )}
 
         <AnimatePresence>
           {note && (
@@ -434,6 +734,7 @@ function KpiMeterCard({ e, variants }) {
       >
         {/* ── FRONT ── */}
         <button type="button" onClick={() => setFlipped(true)} aria-label={`${meta.name}: see why`}
+          aria-hidden={flipped} tabIndex={flipped ? -1 : 0}
           className={`${faceBase} gap-3`} style={hidden}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -464,6 +765,7 @@ function KpiMeterCard({ e, variants }) {
 
         {/* ── BACK ── */}
         <button type="button" onClick={() => setFlipped(false)} aria-label={`${meta.name}: back`}
+          aria-hidden={!flipped} tabIndex={flipped ? 0 : -1}
           className={`${faceBase} gap-2`} style={{ ...hidden, transform: 'rotateY(180deg)' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="text-[10px] uppercase tracking-[0.16em] text-arena-muted font-display font-bold">{meta.short} · why this number</div>

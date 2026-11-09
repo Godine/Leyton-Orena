@@ -49,23 +49,44 @@ for (const t of targetsSeed) {
   _targetsByConsultant.get(t.consultant)[t.fiscal_month] = t.target
 }
 
-export function getConsultants() {
-  return consultants
+// Normalise names so spelling/case/accent variants collapse to one person.
+export function normName(n = '') {
+  return String(n).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
-export function getConsultant(name) {
-  return consultants.find((c) => c.name === name) ?? null
+// ── Override layer ───────────────────────────────────────────────────────────
+// Uploaded spreadsheets add `engine`/`upload` rows that win over workbook_import
+// (spec prompt 8). `overrides` is { [name]: { 'month:4:1': row, … } } and
+// `extraConsultants` are consultants that only exist in an upload. Both are
+// passed in by the store so this module stays pure and side-effect free.
+export const SEED_CONSULTANTS = consultants
+
+export function getConsultants(extra = []) {
+  if (!extra || extra.length === 0) return consultants
+  const seen = new Set(consultants.map((c) => normName(c.name)))
+  const add = extra.filter((c) => !seen.has(normName(c.name)))
+  return add.length ? [...consultants, ...add] : consultants
 }
 
-// Returns { 'month:3:1': row, 'quarter:1:4': row, … } for a consultant.
-export function getResultsFor(name) {
+export function getConsultant(name, extra = []) {
+  return getConsultants(extra).find((c) => c.name === name) ?? null
+}
+
+// Returns { 'month:3:1': row, 'quarter:1:4': row, … } for a consultant, with any
+// uploaded overrides merged over the workbook baseline.
+export function getResultsFor(name, overrides = null) {
   const m = _byConsultant.get(name)
-  return m ? Object.fromEntries(m) : {}
+  const base = m ? Object.fromEntries(m) : {}
+  const ov = overrides && overrides[name]
+  return ov ? { ...base, ...ov } : base
 }
 
-export function getResult(name, periodType, period, kpi) {
+export function getResult(name, periodType, period, kpi, overrides = null) {
+  const key = `${periodType}:${period}:${kpi}`
+  const ov = overrides && overrides[name] && overrides[name][key]
+  if (ov) return ov
   const m = _byConsultant.get(name)
-  return m ? m.get(`${periodType}:${period}:${kpi}`) ?? null : null
+  return m ? m.get(key) ?? null : null
 }
 
 export function getTargets(name) {
@@ -76,28 +97,24 @@ export function getManagerNote(name) {
   return managerNotes[name] ?? null
 }
 
-// Distinct managers / ADs for filters.
-export function getManagers() {
-  return [...new Set(consultants.map((c) => c.manager))].filter(Boolean).sort()
+// Distinct managers / ADs for filters (includes uploaded consultants).
+export function getManagers(extra = []) {
+  return [...new Set(getConsultants(extra).map((c) => c.manager))].filter(Boolean).sort()
 }
-export function getADs() {
-  return [...new Set(consultants.map((c) => c.ad))].filter(Boolean).sort()
+export function getADs(extra = []) {
+  return [...new Set(getConsultants(extra).map((c) => c.ad))].filter(Boolean).sort()
 }
 
 // ── Link Arena consultants (own roster) to their KPI workbook record by name ──
-// Case/accent-folded, with the same spelling aliases used when the Arena roster
-// was generated from this list.
-function normName(n = '') {
-  return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
-}
 // Arena spelling → KPI spelling for the few that differ beyond case/accents.
 const ARENA_TO_KPI = { 'scott toner': 'scott tonner', 'henry shipley': 'henry shiplee' }
-const _kpiNameByNorm = new Map()
-for (const c of consultants) _kpiNameByNorm.set(normName(c.name), c.name)
 
-// Returns the canonical KPI consultant name for an Arena name, or null.
-export function resolveKpiName(arenaName) {
+// Returns the canonical KPI consultant name for an Arena name, or null. Includes
+// any uploaded consultants so freshly-added people resolve too.
+export function resolveKpiName(arenaName, extra = []) {
+  const index = new Map()
+  for (const c of getConsultants(extra)) index.set(normName(c.name), c.name)
   const k = normName(arenaName)
   const target = ARENA_TO_KPI[k] ?? k
-  return _kpiNameByNorm.get(target) ?? null
+  return index.get(target) ?? null
 }
