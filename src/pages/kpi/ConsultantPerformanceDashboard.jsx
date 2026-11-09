@@ -190,10 +190,8 @@ export default function ConsultantPerformanceDashboard() {
 
   return (
     <div className="space-y-6 xl:space-y-8">
-      <motion.header className="relative flex flex-col gap-3 overflow-hidden"
+      <motion.header className="relative flex flex-col gap-3"
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
-        <div className="pointer-events-none absolute -top-24 -left-16 h-56 w-56 rounded-full opacity-25 blur-3xl"
-          style={{ background: 'radial-gradient(circle, #F75C03, transparent 70%)' }} />
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <motion.div className="h-12 w-12 rounded-2xl bg-arena-surface border border-arena-border grid place-items-center shadow-glow-amber"
