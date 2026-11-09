@@ -200,9 +200,11 @@ export default function ConsultantPerformanceDashboard() {
               initial={{ rotate: -8, scale: 0.8 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
               <User className="text-arena-amber" size={24} strokeWidth={2.4} />
             </motion.div>
-            <span className="arena-chip bg-arena-surface2 text-arena-muted inline-flex items-center gap-1.5">
-              <FileSpreadsheet size={12} /> {hasOverrides ? 'Custom data active' : 'Imported from workbook · Jul–Sep 2026 + Q1'}
-            </span>
+            {hasOverrides && (
+              <span className="arena-chip bg-arena-surface2 text-arena-muted inline-flex items-center gap-1.5">
+                <FileSpreadsheet size={12} /> Custom data active
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => downloadCsv(filtered, overrides)}
