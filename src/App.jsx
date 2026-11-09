@@ -26,6 +26,8 @@ const Seasons      = lazy(() => import('./pages/Seasons.jsx'))
 const Admin        = lazy(() => import('./pages/Admin.jsx'))
 const ConsultantPerformance = lazy(() => import('./pages/kpi/ConsultantPerformanceDashboard.jsx'))
 const KpiUpload             = lazy(() => import('./pages/kpi/KpiUpload.jsx'))
+const Cup                   = lazy(() => import('./pages/Cup.jsx'))
+const CupDraft             = lazy(() => import('./pages/CupDraft.jsx'))
 
 // Wraps app pages in the AppShell + ErrorBoundary + page transition. Redirects
 // to /login when the user isn't authed.
@@ -102,6 +104,8 @@ export default function App() {
           <Route path="/admin"        element={<AppRoute><Admin /></AppRoute>} />
           <Route path="/performance"       element={<AppRoute><ConsultantPerformance /></AppRoute>} />
           <Route path="/performance/upload" element={<AppRoute><KpiUpload /></AppRoute>} />
+          <Route path="/cup"                element={<AppRoute><Cup /></AppRoute>} />
+          <Route path="/cup/draft"          element={<AppRoute><CupDraft /></AppRoute>} />
           <Route path="*"             element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

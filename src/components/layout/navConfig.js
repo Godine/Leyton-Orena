@@ -1,4 +1,5 @@
-import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3, LineChart } from 'lucide-react'
+import { Home, Trophy, Award, Medal, Gift, Gauge, BarChart3, LineChart, Swords } from 'lucide-react'
+// (Swords also used below for the hidden Duels item; single import here.)
 
 // Grouped navigation. Groups without a `label` render flat (no header, no
 // collapse). Labelled groups render as collapsible sections.
@@ -12,6 +13,7 @@ export const NAV_GROUPS = [
     items: [
       { to: '/',             label: 'Home',         icon: Home },
       { to: '/seasons',      label: 'Leaderboard',  icon: Trophy },
+      { to: '/cup',          label: 'Face-Off',     icon: Swords },
       { to: '/achievements', label: 'Achievements', icon: Award },
       { to: '/records',      label: 'Records',      icon: Medal },
       { to: '/rewards',      label: 'Rewards',      icon: Gift },
@@ -25,7 +27,7 @@ export const NAV_GROUPS = [
 // Flat list — used by command palette, mobile drawer fallback, etc. We also
 // expose the routes that are reachable but hidden from the sidebar (Profile,
 // Admin, Duels, Compare, Wrapped) so ⌘K can still jump to them.
-import { User, Settings, Swords, GitCompare, Sparkles } from 'lucide-react'
+import { User, Settings, GitCompare, Sparkles } from 'lucide-react'
 
 export const HIDDEN_NAV_ITEMS = [
   { to: '/profile',  label: 'My Profile', icon: User },
